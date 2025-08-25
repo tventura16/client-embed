@@ -1,21 +1,20 @@
 const urlbase = "https://qa.sintesis.com.bo/pasarelapagos-msapi/embedded/api/v1/";
 const apiKey = "dGVzdF9hcGlfa2V5XzEyMzQ1Njc4OTA=";
-const companyData = { companyId: "34" };
 
 const requestData = {
-  email: "tory@localhost.com",
-  password: "p4ssw0rd$",
-  nombre: "tory prueba",
-  extCi: "tj",
-  comCi: "01",
-  carnet: "5808569",
-  telefono: "75118536",
-  firstName: "tory",
-  lastName: "prueba",
-  activated: true,
-  typeAccount: "MCE",
-  pais: "BOLIVIA",
-  fecNac: 19850616,
+"email": "davidm04@idepro.com",
+    "password": "p4ssw0rd$",
+    "firstName": "eitner",
+    "lastName": "montero", 
+    "fullName": "david montero",
+    "identityNumber": "5808569",
+    "identityExtension": "tj",
+    "identityComplement": "01",
+    "phoneNumber": "75118536",
+    "accountType": "MCE",
+    "country": "BOLIVIA",
+    "birthDate": 19850616,
+    "activated": true
 };
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -85,12 +84,11 @@ async function authenticate() {
   try {
     showLoading();
     const response = await fetch(url, {
-      method: "POST",
+      method: "GET",
       headers: {
         "Content-Type": "application/json",
         "X-API-KEY": apiKey,
       },
-      body: JSON.stringify(companyData),
     });
 
     if (!response.ok) throw new Error("Error en la autenticación");
