@@ -86,7 +86,16 @@ function setAuthToken(token) {
 async function authenticate() {
   const url = `${urlbase}auth/authenticate`;
   try {
-    showLoading();
+    const btn = document.getElementById("generate-btn");
+    const spinner = btn.querySelector(".loading-spinner");
+    const statusIndicator = document.getElementById("status-indicator");
+
+    btn.disabled = true;
+    spinner.style.display = "inline-block";
+    statusIndicator.className = "status-indicator loading";
+    statusIndicator.style.display = "flex";
+    statusIndicator.innerHTML =
+      '<i class="fas fa-spinner fa-spin"></i> <span>Obteniendo credenciales...</span>';
     const response = await fetch(url, {
       method: "GET",
       headers: {
@@ -104,7 +113,7 @@ async function authenticate() {
   } catch (error) {
     console.error("Error al autenticar:", error);
     hideLoading();
-    showError("Error al autenticar. Verifica tu conexión.");
+    showError("Acceso no permitido");
     return null;
   }
 }
@@ -168,7 +177,7 @@ async function handleGenerateClick() {
     await generatePaymentLink(token);
   } else {
     hideLoading();
-    showError("No se pudo obtener un token de autenticación válido.");
+    showError("Acceso no permitido");
   }
 }
 
