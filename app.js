@@ -1,30 +1,33 @@
-const urlbase = "https://qa.sintesis.com.bo/pasarelapagos-msapi/embedded/api/v1/";
+const urlbase =
+  "https://qa.sintesis.com.bo/pasarelapagos-msapi/embedded/api/v1/";
 const apiKey = "dGVzdF9hcGlfa2V5XzEyMzQ1Njc4OTA=";
 
 const requestData = {
-"email": "davidm04@idepro.com",
-    "password": "p4ssw0rd$",
-    "firstName": "eitner",
-    "lastName": "montero", 
-    "fullName": "david montero",
-    "identityNumber": "5808569",
-    "identityExtension": "tj",
-    "identityComplement": "01",
-    "phoneNumber": "75118536",
-    "accountType": "MCE",
-    "country": "BOLIVIA",
-    "birthDate": 19850616,
-    "activated": true
+  email: "davidm04@idepro.com",
+  password: "p4ssw0rd$",
+  firstName: "eitner",
+  lastName: "montero",
+  fullName: "david montero",
+  identityNumber: "5808569",
+  identityExtension: "tj",
+  identityComplement: "01",
+  phoneNumber: "75118536",
+  accountType: "MCE",
+  country: "BOLIVIA",
+  birthDate: 19850616,
+  activated: true,
 };
 
 document.addEventListener("DOMContentLoaded", () => {
-  document.getElementById("generate-btn").addEventListener("click", handleGenerateClick);
-  
+  document
+    .getElementById("generate-btn")
+    .addEventListener("click", handleGenerateClick);
+
   // Añadir animación de entrada a las tarjetas
-  const cards = document.querySelectorAll('.feature-card');
+  const cards = document.querySelectorAll(".feature-card");
   cards.forEach((card, index) => {
     card.style.animationDelay = `${index * 0.1}s`;
-    card.classList.add('animate-fade-in');
+    card.classList.add("animate-fade-in");
   });
 });
 
@@ -32,18 +35,19 @@ function showLoading() {
   const btn = document.getElementById("generate-btn");
   const spinner = btn.querySelector(".loading-spinner");
   const statusIndicator = document.getElementById("status-indicator");
-  
+
   btn.disabled = true;
   spinner.style.display = "inline-block";
   statusIndicator.className = "status-indicator loading";
   statusIndicator.style.display = "flex";
-  statusIndicator.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>Procesando solicitud...</span>';
+  statusIndicator.innerHTML =
+    '<i class="fas fa-spinner fa-spin"></i> <span>Procesando solicitud...</span>';
 }
 
 function hideLoading() {
   const btn = document.getElementById("generate-btn");
   const spinner = btn.querySelector(".loading-spinner");
-  
+
   btn.disabled = false;
   spinner.style.display = "none";
 }
@@ -52,7 +56,7 @@ function showSuccess(message = "Sistema de pagos cargado correctamente") {
   const statusIndicator = document.getElementById("status-indicator");
   statusIndicator.className = "status-indicator success";
   statusIndicator.innerHTML = `<i class="fas fa-check-circle"></i> <span>${message}</span>`;
-  
+
   // Ocultar después de 3 segundos
   setTimeout(() => {
     statusIndicator.style.display = "none";
@@ -64,7 +68,7 @@ function showError(message = "Error al cargar el sistema de pagos") {
   statusIndicator.className = "status-indicator error";
   statusIndicator.style.display = "flex";
   statusIndicator.innerHTML = `<i class="fas fa-exclamation-circle"></i> <span>${message}</span>`;
-  
+
   // Ocultar después de 5 segundos
   setTimeout(() => {
     statusIndicator.style.display = "none";
@@ -124,25 +128,24 @@ async function generatePaymentLink(token) {
     if (paymentLink) {
       const iframe = document.getElementById("payment-iframe");
       const container = document.getElementById("iframe-container");
-      
+
       iframe.src = paymentLink;
       container.style.display = "block";
-      
+
       // Añadir animación al iframe
       iframe.style.opacity = "0";
       iframe.style.transform = "translateY(20px)";
-      
+
       iframe.onload = () => {
         hideLoading();
         showSuccess("Sistema de pagos cargado correctamente");
         iframe.style.transition = "all 0.5s ease";
         iframe.style.opacity = "1";
         iframe.style.transform = "translateY(0)";
-        
+
         // Scroll suave hacia el iframe
-        container.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        container.scrollIntoView({ behavior: "smooth", block: "start" });
       };
-      
     } else {
       hideLoading();
       showError("No se encontró un enlace de pago en la respuesta.");
@@ -166,14 +169,14 @@ async function handleGenerateClick() {
   } else {
     hideLoading();
     showError("No se pudo obtener un token de autenticación válido.");
-  } 
+  }
 }
 
 function isTokenValid(token) {
   if (!token) return false;
 
   try {
-    const payloadBase64 = token.split('.')[1];
+    const payloadBase64 = token.split(".")[1];
     const payload = JSON.parse(atob(payloadBase64));
     const currentTime = Math.floor(Date.now() / 1000); // tiempo actual en segundos
     return payload.exp && payload.exp > currentTime;
@@ -182,4 +185,3 @@ function isTokenValid(token) {
     return false;
   }
 }
-
