@@ -283,7 +283,7 @@
 
         .payment-card {
           padding: 1.5rem;
-          margin: 0 10px;
+          margin: 0 10px 2rem 10px;
         }
 
         .generate-btn {
@@ -347,20 +347,16 @@
         </div>
 
         <div class="action-section">
-          <button
-            id="generate-btn-suite"
-            class="generate-btn"
-            onclick="loadSuite()"
-          >
+          <button id="generate-btn-suite" class="generate-btn">
             <i class="fas fa-wallet"></i> Acceder a Mis Cuentas Suite
             <span class="loading-spinner">
               <i class="fas fa-spinner fa-spin"></i>
             </span>
           </button>
 
-          <div class="status-indicator" id="status-indicator">
+          <div class="status-indicator" id="status-indicator-suite">
             <i class="fas fa-check-circle"></i>
-            <span>Cargando sistema de pagos...</span>
+            <span>Cargando sistema de pagos suite...</span>
           </div>
         </div>
 

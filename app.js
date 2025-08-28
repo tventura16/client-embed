@@ -26,6 +26,10 @@ document.addEventListener("DOMContentLoaded", () => {
     .getElementById("generate-btn")
     .addEventListener("click", handleGenerateClick);
 
+  document
+    .getElementById("generate-btn-suite")
+    .addEventListener("click", handleGenerateClickSuite);
+
   // Añadir animación de entrada a las tarjetas
   const cards = document.querySelectorAll(".feature-card");
   cards.forEach((card, index) => {
@@ -55,29 +59,44 @@ window.addEventListener("load", () => {
   }
 });
 
-function showLoading() {
-  const btn = document.getElementById("generate-btn");
+function showLoading(cardType = "main") {
+  const btnId = cardType === "suite" ? "generate-btn-suite" : "generate-btn";
+  const statusId =
+    cardType === "suite" ? "status-indicator-suite" : "status-indicator";
+
+  const btn = document.getElementById(btnId);
   const spinner = btn.querySelector(".loading-spinner");
-  const statusIndicator = document.getElementById("status-indicator");
+  const statusIndicator = document.getElementById(statusId);
 
   btn.disabled = true;
   spinner.style.display = "inline-block";
   statusIndicator.className = "status-indicator loading";
   statusIndicator.style.display = "flex";
-  statusIndicator.innerHTML =
-    '<i class="fas fa-spinner fa-spin"></i> <span>Procesando solicitud...</span>';
+
+  const message =
+    cardType === "suite"
+      ? "Procesando solicitud suite..."
+      : "Procesando solicitud...";
+
+  statusIndicator.innerHTML = `<i class="fas fa-spinner fa-spin"></i> <span>${message}</span>`;
 }
 
-function hideLoading() {
-  const btn = document.getElementById("generate-btn");
+function hideLoading(cardType = "main") {
+  const btnId = cardType === "suite" ? "generate-btn-suite" : "generate-btn";
+  const btn = document.getElementById(btnId);
   const spinner = btn.querySelector(".loading-spinner");
 
   btn.disabled = false;
   spinner.style.display = "none";
 }
 
-function showSuccess(message = "Sistema de pagos cargado correctamente") {
-  const statusIndicator = document.getElementById("status-indicator");
+function showSuccess(
+  message = "Sistema de pagos cargado correctamente",
+  cardType = "main"
+) {
+  const statusId =
+    cardType === "suite" ? "status-indicator-suite" : "status-indicator";
+  const statusIndicator = document.getElementById(statusId);
   statusIndicator.className = "status-indicator success";
   statusIndicator.innerHTML = `<i class="fas fa-check-circle"></i> <span>${message}</span>`;
 
@@ -87,8 +106,13 @@ function showSuccess(message = "Sistema de pagos cargado correctamente") {
   }, 3000);
 }
 
-function showError(message = "Error al cargar el sistema de pagos") {
-  const statusIndicator = document.getElementById("status-indicator");
+function showError(
+  message = "Error al cargar el sistema de pagos",
+  cardType = "main"
+) {
+  const statusId =
+    cardType === "suite" ? "status-indicator-suite" : "status-indicator";
+  const statusIndicator = document.getElementById(statusId);
   statusIndicator.className = "status-indicator error";
   statusIndicator.style.display = "flex";
   statusIndicator.innerHTML = `<i class="fas fa-exclamation-circle"></i> <span>${message}</span>`;
@@ -107,19 +131,29 @@ function setAuthToken(key, token) {
   sessionStorage.setItem(key, token);
 }
 
-async function authenticate(apiKey) {
+async function authenticate(apiKey, cardType = "main") {
   const url = `${urlbase}auth/authenticate`;
   try {
-    const btn = document.getElementById("generate-btn");
+    const btnId = cardType === "suite" ? "generate-btn-suite" : "generate-btn";
+    const statusId =
+      cardType === "suite" ? "status-indicator-suite" : "status-indicator";
+
+    const btn = document.getElementById(btnId);
     const spinner = btn.querySelector(".loading-spinner");
-    const statusIndicator = document.getElementById("status-indicator");
+    const statusIndicator = document.getElementById(statusId);
 
     btn.disabled = true;
     spinner.style.display = "inline-block";
     statusIndicator.className = "status-indicator loading";
     statusIndicator.style.display = "flex";
-    statusIndicator.innerHTML =
-      '<i class="fas fa-spinner fa-spin"></i> <span>Obteniendo credenciales...</span>';
+
+    const message =
+      cardType === "suite"
+        ? "Obteniendo credenciales suite..."
+        : "Obteniendo credenciales...";
+
+    statusIndicator.innerHTML = `<i class="fas fa-spinner fa-spin"></i> <span>${message}</span>`;
+
     const response = await fetch(url, {
       method: "GET",
       headers: {
@@ -131,18 +165,22 @@ async function authenticate(apiKey) {
     if (!response.ok) throw new Error("Error en la autenticación");
 
     const result = await response.json();
-    setAuthToken(key, result.accessToken);
-    console.log("Nuevo token de autenticación:", result.accessToken);
+    const tokenKey = cardType === "suite" ? keySuite : key;
+    setAuthToken(tokenKey, result.accessToken);
+    console.log(
+      `Nuevo token de autenticación ${cardType}:`,
+      result.accessToken
+    );
     return result.accessToken;
   } catch (error) {
     console.error("Error al autenticar:", error);
-    hideLoading();
-    showError("Acceso no permitido");
+    hideLoading(cardType);
+    showError("Acceso no permitido", cardType);
     return null;
   }
 }
 
-async function generatePaymentLink(token) {
+async function generatePaymentLink(token, cardType = "main") {
   const url = `${urlbase}payments/generate-link`;
 
   try {
@@ -159,8 +197,13 @@ async function generatePaymentLink(token) {
     const paymentLink = data.embedUrl || data.url || data.iframeUrl;
 
     if (paymentLink) {
-      const iframe = document.getElementById("payment-iframe");
-      const container = document.getElementById("iframe-container");
+      const iframeId =
+        cardType === "suite" ? "payment-iframe-suite" : "payment-iframe";
+      const containerId =
+        cardType === "suite" ? "iframe-container-suite" : "iframe-container";
+
+      const iframe = document.getElementById(iframeId);
+      const container = document.getElementById(containerId);
 
       iframe.src = paymentLink;
       container.style.display = "block";
@@ -170,8 +213,12 @@ async function generatePaymentLink(token) {
       iframe.style.transform = "translateY(20px)";
 
       iframe.onload = () => {
-        hideLoading();
-        showSuccess("Sistema de pagos cargado correctamente");
+        hideLoading(cardType);
+        const message =
+          cardType === "suite"
+            ? "Sistema de pagos suite cargado correctamente"
+            : "Sistema de pagos cargado correctamente";
+        showSuccess(message, cardType);
         iframe.style.transition = "all 0.5s ease";
         iframe.style.opacity = "1";
         iframe.style.transform = "translateY(0)";
@@ -180,89 +227,42 @@ async function generatePaymentLink(token) {
         container.scrollIntoView({ behavior: "smooth", block: "start" });
       };
     } else {
-      hideLoading();
-      showError("No se encontró un enlace de pago en la respuesta.");
+      hideLoading(cardType);
+      showError("No se encontró un enlace de pago en la respuesta.", cardType);
     }
   } catch (error) {
     console.error("Error al generar el enlace de pago:", error);
-    hideLoading();
-    showError("Error al generar el enlace de pago.");
+    hideLoading(cardType);
+    showError("Error al generar el enlace de pago.", cardType);
   }
 }
-async function generatePaymentLinkSuite(token) {
-  const url = `${urlbase}payments/generate-link`;
-
-  try {
-    const response = await fetch(url, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    const data = await response.json();
-    const paymentLink = data.embedUrl || data.url || data.iframeUrl;
-
-    if (paymentLink) {
-      const iframe = document.getElementById("payment-iframe-suite");
-      const container = document.getElementById("iframe-container-suite");
-
-      iframe.src = paymentLink;
-      container.style.display = "block";
-
-      // Añadir animación al iframe
-      iframe.style.opacity = "0";
-      iframe.style.transform = "translateY(20px)";
-
-      iframe.onload = () => {
-        hideLoading();
-        showSuccess("Sistema de pagos cargado correctamente");
-        iframe.style.transition = "all 0.5s ease";
-        iframe.style.opacity = "1";
-        iframe.style.transform = "translateY(0)";
-
-        // Scroll suave hacia el iframe
-        container.scrollIntoView({ behavior: "smooth", block: "start" });
-      };
-    } else {
-      hideLoading();
-      showError("No se encontró un enlace de pago en la respuesta.");
-    }
-  } catch (error) {
-    console.error("Error al generar el enlace de pago:", error);
-    hideLoading();
-    showError("Error al generar el enlace de pago.");
-  }
-}
-
 async function handleGenerateClick() {
   let token = getAuthToken(key);
 
   if (!isTokenValid(token)) {
-    token = await authenticate(apiKey);
+    token = await authenticate(apiKey, "main");
   }
 
   if (token) {
-    await generatePaymentLink(token);
+    await generatePaymentLink(token, "main");
   } else {
-    hideLoading();
-    showError("Acceso no permitido");
+    hideLoading("main");
+    showError("Acceso no permitido", "main");
   }
 }
 
-async function loadSuite() {
+async function handleGenerateClickSuite() {
   let token = getAuthToken(keySuite);
 
   if (!isTokenValid(token)) {
-    token = await authenticate(apiKeySuite);
+    token = await authenticate(apiKeySuite, "suite");
   }
 
   if (token) {
-    await generatePaymentLink(token);
+    await generatePaymentLink(token, "suite");
   } else {
-    hideLoading();
-    showError("Acceso no permitido");
+    hideLoading("suite");
+    showError("Acceso no permitido", "suite");
   }
 }
 
