@@ -97,7 +97,7 @@
         margin-bottom: 2rem;
       }
 
-      #generate-btn {
+      .generate-btn {
         background: var(--gradient-primary);
         border: none;
         color: white;
@@ -114,22 +114,22 @@
         overflow: hidden;
       }
 
-      #generate-btn:hover {
+      .generate-btn:hover {
         transform: translateY(-2px);
         box-shadow: 0 6px 20px rgba(0, 86, 179, 0.4);
       }
 
-      #generate-btn:active {
+      .generate-btn:active {
         transform: translateY(0);
       }
 
-      #generate-btn:disabled {
+      .generate-btn:disabled {
         opacity: 0.6;
         cursor: not-allowed;
         transform: none;
       }
 
-      #generate-btn::before {
+      .generate-btn::before {
         content: "";
         position: absolute;
         top: 0;
@@ -145,7 +145,7 @@
         transition: left 0.5s;
       }
 
-      #generate-btn:hover::before {
+      .generate-btn:hover::before {
         left: 100%;
       }
 
@@ -154,7 +154,7 @@
         margin-left: 10px;
       }
 
-      #iframe-container {
+      .iframe-container {
         width: 100%;
         display: none;
         margin-top: 2rem;
@@ -286,7 +286,7 @@
           margin: 0 10px;
         }
 
-        #generate-btn {
+        .generate-btn {
           font-size: 1rem;
           padding: 12px 30px;
         }
@@ -318,7 +318,7 @@
         </div>
 
         <div class="action-section">
-          <button id="generate-btn">
+          <button id="generate-btn" class="generate-btn">
             <i class="fas fa-wallet"></i> Acceder a Mis Cuentas Web
             <span class="loading-spinner">
               <i class="fas fa-spinner fa-spin"></i>
@@ -331,9 +331,38 @@
           </div>
         </div>
 
-        <div id="iframe-container">
+        <div id="iframe-container" class="iframe-container">
           <iframe
             id="payment-iframe"
+            src="about:blank"
+            title="Sistema de Pagos Embebido"
+          ></iframe>
+        </div>
+      </div>
+
+      <div class="payment-card">
+        <div class="payment-header">
+          <h2><i class="fas fa-credit-card"></i> Portal de Pagos Suite</h2>
+          <p>Gestiona tus pagos en la plataforma suite</p>
+        </div>
+
+        <div class="action-section">
+          <button id="generate-btn-suite" class="generate-btn">
+            <i class="fas fa-wallet"></i> Acceder a Mis Cuentas Suite
+            <span class="loading-spinner">
+              <i class="fas fa-spinner fa-spin"></i>
+            </span>
+          </button>
+
+          <div class="status-indicator" id="status-indicator">
+            <i class="fas fa-check-circle"></i>
+            <span>Cargando sistema de pagos...</span>
+          </div>
+        </div>
+
+        <div id="iframe-container-suite" class="iframe-container">
+          <iframe
+            id="payment-iframe-suite"
             src="about:blank"
             title="Sistema de Pagos Embebido"
           ></iframe>

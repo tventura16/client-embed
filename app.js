@@ -1,6 +1,7 @@
 const urlbase =
   "https://qa.sintesis.com.bo/pasarelapagos-msapi/embedded/api/v1/";
 const apiKey = "dGVzdF9hcGlfa2V5XzEyMzQ1Njc4OTA=";
+const apiKeySuite = "YXBpX2tleV9hZGY1ZTIzMzE2NjQwODc4Mw==";
 
 const requestData = {
   email: "davidm04@idepro.com",
@@ -29,6 +30,27 @@ document.addEventListener("DOMContentLoaded", () => {
     card.style.animationDelay = `${index * 0.1}s`;
     card.classList.add("animate-fade-in");
   });
+});
+
+// Capturar evento de refresco de página y limpiar storage
+window.addEventListener("beforeunload", (event) => {
+  // Limpiar localStorage
+  localStorage.clear();
+
+  // Limpiar sessionStorage
+  sessionStorage.clear();
+
+  console.log("Storage limpiado antes de refrescar/cerrar la página");
+});
+
+// También limpiar storage al cargar la página
+window.addEventListener("load", () => {
+  // Verificar si es un refresco de página
+  if (performance.navigation.type === performance.navigation.TYPE_RELOAD) {
+    localStorage.clear();
+    sessionStorage.clear();
+    console.log("Storage limpiado después del refresco de página");
+  }
 });
 
 function showLoading() {
