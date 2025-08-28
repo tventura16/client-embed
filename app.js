@@ -1,7 +1,7 @@
 const urlbase =
   "https://qa.sintesis.com.bo/pasarelapagos-msapi/embedded/api/v1/";
 const apiKey = "dGVzdF9hcGlfa2V5XzEyMzQ1Njc4OTA=";
-const apiKeySuite = "YXBpX2tleV8zZjdhOWI0ZTU4MjEwYzY5";
+const apiKeySuite = "YXBpX2tleV9hZGY1ZTIzMzE2NjQwODc4Mw==";
 const key = "authToken";
 const keySuite = "authTokenSuite";
 
