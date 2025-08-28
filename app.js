@@ -6,8 +6,8 @@ const key = "authToken";
 const keySuite = "authTokenSuite";
 
 const requestData = {
-  email: "davidm04@idepro.com",
-  password: "p4ssw0rd$",
+  email: "miscuentas345@gmail.com",
+  password: "Sintesis2025",
   firstName: "eitner",
   lastName: "montero",
   fullName: "david montero",
