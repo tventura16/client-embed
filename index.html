@@ -158,6 +158,8 @@
         width: 100%;
         display: none;
         margin-top: 2rem;
+        overflow: hidden;
+        border-radius: 15px;
       }
 
       #payment-iframe {
@@ -168,6 +170,22 @@
         box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
         background: white;
         transition: all 0.3s ease;
+        min-width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+      }
+
+      #payment-iframe-suite {
+        width: 100%;
+        height: 700px;
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+        background: white;
+        transition: all 0.3s ease;
+        min-width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
       }
 
       .status-indicator {
@@ -291,8 +309,12 @@
           padding: 12px 30px;
         }
 
-        #payment-iframe {
+        #payment-iframe,
+        #payment-iframe-suite {
           height: 600px;
+          width: 100%;
+          min-width: 100%;
+          max-width: 100%;
         }
       }
 
