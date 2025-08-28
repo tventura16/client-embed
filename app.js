@@ -238,7 +238,7 @@ async function generatePaymentLink(token, cardType = "main") {
 }
 
 async function generatePaymentLinkSuite(token) {
-  const url = `${urlbase}payments/generate-link`;
+  const url = `${urlbase}payments/generate-embed-link`;
 
   try {
     const response = await fetch(url, {
