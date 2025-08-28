@@ -2,6 +2,8 @@ const urlbase =
   "https://qa.sintesis.com.bo/pasarelapagos-msapi/embedded/api/v1/";
 const apiKey = "dGVzdF9hcGlfa2V5XzEyMzQ1Njc4OTA=";
 const apiKeySuite = "YXBpX2tleV9hZGY1ZTIzMzE2NjQwODc4Mw==";
+const key = "authToken";
+const keySuite = "authTokenSuite";
 
 const requestData = {
   email: "davidm04@idepro.com",
@@ -97,15 +99,15 @@ function showError(message = "Error al cargar el sistema de pagos") {
   }, 5000);
 }
 
-function getAuthToken() {
-  return sessionStorage.getItem("authToken");
+function getAuthToken(key) {
+  return sessionStorage.getItem(key);
 }
 
-function setAuthToken(token) {
-  sessionStorage.setItem("authToken", token);
+function setAuthToken(key, token) {
+  sessionStorage.setItem(key, token);
 }
 
-async function authenticate() {
+async function authenticate(apiKey) {
   const url = `${urlbase}auth/authenticate`;
   try {
     const btn = document.getElementById("generate-btn");
@@ -129,7 +131,7 @@ async function authenticate() {
     if (!response.ok) throw new Error("Error en la autenticación");
 
     const result = await response.json();
-    setAuthToken(result.accessToken);
+    setAuthToken(key, result.accessToken);
     console.log("Nuevo token de autenticación:", result.accessToken);
     return result.accessToken;
   } catch (error) {
@@ -187,12 +189,73 @@ async function generatePaymentLink(token) {
     showError("Error al generar el enlace de pago.");
   }
 }
+async function generatePaymentLinkSuite(token) {
+  const url = `${urlbase}payments/generate-link`;
+
+  try {
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    const data = await response.json();
+    const paymentLink = data.embedUrl || data.url || data.iframeUrl;
+
+    if (paymentLink) {
+      const iframe = document.getElementById("payment-iframe-suite");
+      const container = document.getElementById("iframe-container-suite");
+
+      iframe.src = paymentLink;
+      container.style.display = "block";
+
+      // Añadir animación al iframe
+      iframe.style.opacity = "0";
+      iframe.style.transform = "translateY(20px)";
+
+      iframe.onload = () => {
+        hideLoading();
+        showSuccess("Sistema de pagos cargado correctamente");
+        iframe.style.transition = "all 0.5s ease";
+        iframe.style.opacity = "1";
+        iframe.style.transform = "translateY(0)";
+
+        // Scroll suave hacia el iframe
+        container.scrollIntoView({ behavior: "smooth", block: "start" });
+      };
+    } else {
+      hideLoading();
+      showError("No se encontró un enlace de pago en la respuesta.");
+    }
+  } catch (error) {
+    console.error("Error al generar el enlace de pago:", error);
+    hideLoading();
+    showError("Error al generar el enlace de pago.");
+  }
+}
 
 async function handleGenerateClick() {
-  let token = getAuthToken();
+  let token = getAuthToken(key);
 
   if (!isTokenValid(token)) {
-    token = await authenticate();
+    token = await authenticate(apiKey);
+  }
+
+  if (token) {
+    await generatePaymentLink(token);
+  } else {
+    hideLoading();
+    showError("Acceso no permitido");
+  }
+}
+
+async function loadSuite() {
+  let token = getAuthToken(keySuite);
+
+  if (!isTokenValid(token)) {
+    token = await authenticate(apiKeySuite);
   }
 
   if (token) {
