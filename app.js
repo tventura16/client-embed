@@ -236,6 +236,54 @@ async function generatePaymentLink(token, cardType = "main") {
     showError("Error al generar el enlace de pago.", cardType);
   }
 }
+
+async function generatePaymentLinkSuite(token) {
+  const url = `${urlbase}payments/generate-link`;
+
+  try {
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    const data = await response.json();
+    const paymentLink = data.embedUrl || data.url || data.iframeUrl;
+
+    if (paymentLink) {
+      const iframe = document.getElementById("payment-iframe-suite");
+      const container = document.getElementById("iframe-container-suite");
+
+      iframe.src = paymentLink;
+      container.style.display = "block";
+
+      // Añadir animación al iframe
+      iframe.style.opacity = "0";
+      iframe.style.transform = "translateY(20px)";
+
+      iframe.onload = () => {
+        hideLoading("suite");
+        showSuccess("Sistema de pagos suite cargado correctamente", "suite");
+        iframe.style.transition = "all 0.5s ease";
+        iframe.style.opacity = "1";
+        iframe.style.transform = "translateY(0)";
+
+        // Scroll suave hacia el iframe
+        container.scrollIntoView({ behavior: "smooth", block: "start" });
+      };
+    } else {
+      hideLoading("suite");
+      showError("No se encontró un enlace de pago en la respuesta.", "suite");
+    }
+  } catch (error) {
+    console.error("Error al generar el enlace de pago suite:", error);
+    hideLoading("suite");
+    showError("Error al generar el enlace de pago.", "suite");
+  }
+}
+
 async function handleGenerateClick() {
   let token = getAuthToken(key);
 
@@ -259,7 +307,7 @@ async function handleGenerateClickSuite() {
   }
 
   if (token) {
-    await generatePaymentLink(token, "suite");
+    await generatePaymentLinkSuite(token);
   } else {
     hideLoading("suite");
     showError("Acceso no permitido", "suite");
