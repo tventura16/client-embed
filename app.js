@@ -30,8 +30,8 @@ const keySuite = "authTokenSuite";
 
 // Datos por defecto
 const defaultRequestData = {
-  email: "idepromonocliente",
-  password: "Sintesis2025",
+  email: "tory@gmail.com",
+  password: "tork2025",
   firstName: "eitner",
   lastName: "montero",
   fullName: "david montero",
@@ -64,7 +64,6 @@ let requestData = getRequestData();
 
 document.addEventListener("DOMContentLoaded", () => {
   // Verificar si existen datos guardados, si no mostrar modal
-  // checkAndShowConfigModal();
 
   // Event listeners para botones principales
   document
