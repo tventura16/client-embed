@@ -1,11 +1,35 @@
 const urlbase =
   "https://qa.sintesis.com.bo/pasarelapagos-msapi/embedded/api/v1/";
-const apiKey = "dGVzdF9hcGlfa2V5XzEyMzQ1Njc4OTA=";
-const apiKeySuite = "YXBpX2tleV9hZGY1ZTIzMzE2NjQwODc4Mw==";
+
+// API Keys por defecto
+const defaultApiKeys = {
+  apiKey: "dGVzdF9hcGlfa2V5XzEyMzQ1Njc4OTA=",
+  apiKeySuite: "YXBpX2tleV9hZGY1ZTIzMzE2NjQwODc4Mw==",
+};
+
+// Funciones para manejar API keys
+function getApiKeys() {
+  const savedKeys = localStorage.getItem("apiKeys");
+  if (savedKeys) {
+    return JSON.parse(savedKeys);
+  }
+  return defaultApiKeys;
+}
+
+function saveApiKeys(keys) {
+  localStorage.setItem("apiKeys", JSON.stringify(keys));
+}
+
+// Obtener API keys del localStorage
+const apiKeys = getApiKeys();
+const apiKey = apiKeys.apiKey;
+const apiKeySuite = apiKeys.apiKeySuite;
+
 const key = "authToken";
 const keySuite = "authTokenSuite";
 
-const requestData = {
+// Datos por defecto
+const defaultRequestData = {
   email: "idepromonocliente",
   password: "Sintesis2025",
   firstName: "eitner",
@@ -21,7 +45,28 @@ const requestData = {
   activated: true,
 };
 
+// Obtener datos del localStorage o usar defaults
+function getRequestData() {
+  const savedData = localStorage.getItem("requestData");
+  if (savedData) {
+    return JSON.parse(savedData);
+  }
+  return defaultRequestData;
+}
+
+// Guardar datos en localStorage
+function saveRequestData(data) {
+  localStorage.setItem("requestData", JSON.stringify(data));
+}
+
+// Variable global para los datos de request
+let requestData = getRequestData();
+
 document.addEventListener("DOMContentLoaded", () => {
+  // Verificar si existen datos guardados, si no mostrar modal
+  // checkAndShowConfigModal();
+
+  // Event listeners para botones principales
   document
     .getElementById("generate-btn")
     .addEventListener("click", handleGenerateClick);
@@ -29,6 +74,41 @@ document.addEventListener("DOMContentLoaded", () => {
   document
     .getElementById("generate-btn-suite")
     .addEventListener("click", handleGenerateClickSuite);
+
+  // Event listener para botón de configuración
+  document
+    .getElementById("config-btn")
+    .addEventListener("click", showConfigModal);
+
+  // Event listener para botón de API keys
+  document
+    .getElementById("api-keys-btn")
+    .addEventListener("click", showApiKeysModal);
+
+  // Event listeners para modal
+  document
+    .getElementById("config-form")
+    .addEventListener("submit", handleConfigSave);
+
+  document
+    .getElementById("load-defaults")
+    .addEventListener("click", loadDefaultsToForm);
+
+  // Event listeners para modal de API keys
+  document
+    .getElementById("api-form")
+    .addEventListener("submit", handleApiKeysSave);
+
+  document
+    .getElementById("load-default-keys")
+    .addEventListener("click", loadDefaultKeysToForm);
+
+  document
+    .getElementById("cancel-api")
+    .addEventListener("click", hideApiKeysModal);
+  document
+    .getElementById("cancel-config-api")
+    .addEventListener("click", hideConfigModal);
 
   // Añadir animación de entrada a las tarjetas
   const cards = document.querySelectorAll(".feature-card");
@@ -38,27 +118,179 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 
+// Funciones para manejar el modal de configuración
+function checkAndShowConfigModal() {
+  const savedData = localStorage.getItem("requestData");
+  if (!savedData) {
+    showConfigModal();
+  }
+}
+
+function showConfigModal() {
+  const modal = document.getElementById("config-modal");
+  modal.classList.remove("hidden");
+  loadDataToForm();
+}
+
+function hideConfigModal() {
+  const modal = document.getElementById("config-modal");
+  modal.classList.add("hidden");
+}
+
+function loadDataToForm() {
+  const currentData = getRequestData();
+
+  document.getElementById("email").value = currentData.email;
+  document.getElementById("password").value = currentData.password;
+  document.getElementById("firstName").value = currentData.firstName;
+  document.getElementById("lastName").value = currentData.lastName;
+  document.getElementById("fullName").value = currentData.fullName;
+  document.getElementById("identityNumber").value = currentData.identityNumber;
+  document.getElementById("identityExtension").value =
+    currentData.identityExtension;
+  document.getElementById("identityComplement").value =
+    currentData.identityComplement;
+  document.getElementById("phoneNumber").value = currentData.phoneNumber;
+  document.getElementById("accountType").value = currentData.accountType;
+  document.getElementById("country").value = currentData.country;
+  document.getElementById("birthDate").value = currentData.birthDate;
+}
+
+function loadDefaultsToForm() {
+  document.getElementById("email").value = defaultRequestData.email;
+  document.getElementById("password").value = defaultRequestData.password;
+  document.getElementById("firstName").value = defaultRequestData.firstName;
+  document.getElementById("lastName").value = defaultRequestData.lastName;
+  document.getElementById("fullName").value = defaultRequestData.fullName;
+  document.getElementById("identityNumber").value =
+    defaultRequestData.identityNumber;
+  document.getElementById("identityExtension").value =
+    defaultRequestData.identityExtension;
+  document.getElementById("identityComplement").value =
+    defaultRequestData.identityComplement;
+  document.getElementById("phoneNumber").value = defaultRequestData.phoneNumber;
+  document.getElementById("accountType").value = defaultRequestData.accountType;
+  document.getElementById("country").value = defaultRequestData.country;
+  document.getElementById("birthDate").value = defaultRequestData.birthDate;
+}
+
+function handleConfigSave(event) {
+  event.preventDefault();
+
+  const formData = new FormData(event.target);
+  const newData = {
+    email: formData.get("email"),
+    password: formData.get("password"),
+    firstName: formData.get("firstName"),
+    lastName: formData.get("lastName"),
+    fullName: formData.get("fullName"),
+    identityNumber: formData.get("identityNumber"),
+    identityExtension: formData.get("identityExtension"),
+    identityComplement: formData.get("identityComplement"),
+    phoneNumber: formData.get("phoneNumber"),
+    accountType: formData.get("accountType"),
+    country: formData.get("country"),
+    birthDate: parseInt(formData.get("birthDate")),
+    activated: true,
+  };
+
+  // Guardar en localStorage
+  saveRequestData(newData);
+
+  // Actualizar variable global
+  requestData = newData;
+
+  // Mostrar mensaje de éxito
+  alert("Configuración guardada correctamente");
+
+  // Cerrar modal
+  hideConfigModal();
+}
+
+// Funciones para manejar el modal de API keys
+function showApiKeysModal() {
+  const modal = document.getElementById("api-modal");
+  modal.classList.remove("hidden");
+  loadKeysToForm();
+}
+
+function hideApiKeysModal() {
+  const modal = document.getElementById("api-modal");
+  modal.classList.add("hidden");
+}
+
+function loadKeysToForm() {
+  const currentKeys = getApiKeys();
+
+  document.getElementById("api-key-main").value = currentKeys.apiKey;
+  document.getElementById("api-key-suite").value = currentKeys.apiKeySuite;
+}
+
+function loadDefaultKeysToForm() {
+  document.getElementById("api-key-main").value = defaultApiKeys.apiKey;
+  document.getElementById("api-key-suite").value = defaultApiKeys.apiKeySuite;
+}
+
+function handleApiKeysSave(event) {
+  event.preventDefault();
+
+  const formData = new FormData(event.target);
+  const newKeys = {
+    apiKey: formData.get("apiKey").trim(),
+    apiKeySuite: formData.get("apiKeySuite").trim(),
+  };
+
+  // Validar que no estén vacías
+  if (!newKeys.apiKey || !newKeys.apiKeySuite) {
+    alert("Por favor, completa ambas API keys");
+    return;
+  }
+
+  // Guardar en localStorage
+  saveApiKeys(newKeys);
+
+  // Mostrar mensaje de éxito
+  alert(
+    "API Keys guardadas correctamente. Recarga la página para aplicar los cambios."
+  );
+
+  // Cerrar modal
+  hideApiKeysModal();
+
+  // Opcional: recargar automáticamente
+  setTimeout(() => {
+    window.location.reload();
+  }, 2000);
+}
+
 // Capturar evento de refresco de página y limpiar storage
 window.addEventListener("beforeunload", (event) => {
-  // Limpiar localStorage
-  localStorage.clear();
-
-  // Limpiar sessionStorage
+  // Limpiar solo tokens, mantener requestData y apiKeys
   sessionStorage.clear();
 
-  console.log("Storage limpiado antes de refrescar/cerrar la página");
+  // Limpiar localStorage excepto requestData y apiKeys
+  const requestDataBackup = localStorage.getItem("requestData");
+  const apiKeysBackup = localStorage.getItem("apiKeys");
+  localStorage.clear();
+  if (requestDataBackup) {
+    localStorage.setItem("requestData", requestDataBackup);
+  }
+  if (apiKeysBackup) {
+    localStorage.setItem("apiKeys", apiKeysBackup);
+  }
+
+  console.log("Storage limpiado (tokens) antes de refrescar/cerrar la página");
 });
 
 // También limpiar storage al cargar la página
 window.addEventListener("load", () => {
   // Verificar si es un refresco de página
   if (performance.navigation.type === performance.navigation.TYPE_RELOAD) {
-    localStorage.clear();
+    // Limpiar solo tokens en refresco
     sessionStorage.clear();
-    console.log("Storage limpiado después del refresco de página");
+    console.log("Tokens limpiados después del refresco de página");
   }
 });
-
 function showLoading(cardType = "main") {
   const btnId = cardType === "suite" ? "generate-btn-suite" : "generate-btn";
   const statusId =
@@ -288,7 +520,8 @@ async function handleGenerateClick() {
   let token = getAuthToken(key);
 
   if (!isTokenValid(token)) {
-    token = await authenticate(apiKey, "main");
+    const currentApiKeys = getApiKeys();
+    token = await authenticate(currentApiKeys.apiKey, "main");
   }
 
   if (token) {
@@ -303,7 +536,8 @@ async function handleGenerateClickSuite() {
   let token = getAuthToken(keySuite);
 
   if (!isTokenValid(token)) {
-    token = await authenticate(apiKeySuite, "suite");
+    const currentApiKeys = getApiKeys();
+    token = await authenticate(currentApiKeys.apiKeySuite, "suite");
   }
 
   if (token) {

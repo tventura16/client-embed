@@ -324,13 +324,363 @@
         color: rgba(255, 255, 255, 0.8);
         font-size: 0.9rem;
       }
+
+      /* Modal de configuración */
+      .config-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+      }
+
+      /* Modal de API Keys */
+      .api-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1001;
+      }
+
+      .config-content {
+        background: white;
+        padding: 2rem;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        max-width: 500px;
+        width: 90%;
+        max-height: 90vh;
+        overflow-y: auto;
+      }
+
+      .api-content {
+        background: white;
+        padding: 2rem;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        max-width: 600px;
+        width: 90%;
+        max-height: 90vh;
+        overflow-y: auto;
+      }
+
+      .config-header {
+        text-align: center;
+        margin-bottom: 1.5rem;
+        color: var(--color-primary);
+      }
+
+      .config-header h2 {
+        margin: 0;
+        font-size: 1.5rem;
+      }
+
+      .form-group {
+        margin-bottom: 1rem;
+      }
+
+      .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        color: var(--color-dark);
+        font-weight: 500;
+      }
+
+      .form-group input,
+      .form-group select,
+      .form-group textarea {
+        width: 100%;
+        padding: 0.75rem;
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: border-color 0.3s;
+        box-sizing: border-box;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      }
+
+      .form-group input:focus,
+      .form-group select:focus,
+      .form-group textarea:focus {
+        outline: none;
+        border-color: var(--color-primary);
+      }
+
+      .form-group textarea {
+        min-height: 80px;
+        max-height: 150px;
+        font-family: "Courier New", Courier, monospace;
+        font-size: 0.9rem;
+        line-height: 1.4;
+      }
+
+      .config-actions {
+        display: flex;
+        gap: 1rem;
+        justify-content: flex-end;
+        margin-top: 2rem;
+      }
+
+      .config-btn {
+        padding: 0.75rem 1.5rem;
+        border: none;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+
+      .config-btn.primary {
+        background: var(--gradient-primary);
+        color: white;
+      }
+
+      .config-btn.secondary {
+        background: #6c757d;
+        color: white;
+      }
+
+      .config-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      }
+
+      .hidden {
+        display: none !important;
+      }
+
+      @media (max-width: 768px) {
+        .config-content {
+          padding: 1.5rem;
+          margin: 1rem;
+        }
+
+        .api-content {
+          padding: 1.5rem;
+          margin: 1rem;
+        }
+
+        .config-actions {
+          flex-direction: column;
+        }
+
+        .config-btn {
+          width: 100%;
+        }
+      }
     </style>
   </head>
   <body>
+    <!-- Modal de configuración -->
+    <div id="config-modal" class="config-modal">
+      <div class="config-content">
+        <div class="config-header">
+          <h2><i class="fas fa-user-cog"></i> Configuración de Datos</h2>
+          <p>Introduce tus datos para el sistema de pagos</p>
+        </div>
+
+        <form id="config-form">
+          <div class="form-group">
+            <label for="email">Email:</label>
+            <input type="email" id="email" name="email" required />
+          </div>
+
+          <div class="form-group">
+            <label for="password">Contraseña:</label>
+            <input type="password" id="password" name="password" required />
+          </div>
+
+          <div class="form-group">
+            <label for="firstName">Primer Nombre:</label>
+            <input type="text" id="firstName" name="firstName" required />
+          </div>
+
+          <div class="form-group">
+            <label for="lastName">Apellido:</label>
+            <input type="text" id="lastName" name="lastName" required />
+          </div>
+
+          <div class="form-group">
+            <label for="fullName">Nombre Completo:</label>
+            <input type="text" id="fullName" name="fullName" required />
+          </div>
+
+          <div class="form-group">
+            <label for="identityNumber">Número de Identidad:</label>
+            <input
+              type="text"
+              id="identityNumber"
+              name="identityNumber"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="identityExtension">Extensión:</label>
+            <select id="identityExtension" name="identityExtension" required>
+              <option value="">Seleccionar...</option>
+              <option value="lp">La Paz</option>
+              <option value="sc">Santa Cruz</option>
+              <option value="cb">Cochabamba</option>
+              <option value="or">Oruro</option>
+              <option value="pt">Potosí</option>
+              <option value="tj">Tarija</option>
+              <option value="ch">Chuquisaca</option>
+              <option value="be">Beni</option>
+              <option value="pd">Pando</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="identityComplement">Complemento:</label>
+            <input
+              type="text"
+              id="identityComplement"
+              name="identityComplement"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="phoneNumber">Teléfono:</label>
+            <input type="tel" id="phoneNumber" name="phoneNumber" required />
+          </div>
+
+          <div class="form-group">
+            <label for="accountType">Tipo de Cuenta:</label>
+            <select id="accountType" name="accountType" required>
+              <option value="">Seleccionar...</option>
+              <option value="MCE">MCE</option>
+              <option value="PERSONAL">Personal</option>
+              <option value="BUSINESS">Empresa</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="country">País:</label>
+            <input
+              type="text"
+              id="country"
+              name="country"
+              value="BOLIVIA"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="birthDate">Fecha de Nacimiento (YYYYMMDD):</label>
+            <input
+              type="number"
+              id="birthDate"
+              name="birthDate"
+              min="19000101"
+              max="20251231"
+              required
+            />
+          </div>
+
+          <div class="config-actions">
+            <button
+              type="button"
+              class="config-btn secondary"
+              id="load-defaults"
+            >
+              <i class="fas fa-undo"></i> Cargar Valores por Defecto
+            </button>
+            <button
+              type="button"
+              class="config-btn secondary"
+              id="cancel-config-api"
+            >
+              <i class="fas fa-times"></i> Cancelar
+            </button>
+            <button type="submit" class="config-btn primary">
+              <i class="fas fa-save"></i> Guardar Configuración
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal de API Keys -->
+    <div id="api-modal" class="api-modal hidden">
+      <div class="api-content">
+        <div class="config-header">
+          <h2><i class="fas fa-key"></i> Gestión de API Keys</h2>
+          <p>Administra las claves de acceso a las APIs</p>
+        </div>
+
+        <form id="api-form">
+          <div class="form-group">
+            <label for="api-key-main">API Key Principal:</label>
+            <textarea
+              id="api-key-main"
+              name="apiKey"
+              rows="3"
+              style="resize: vertical"
+              placeholder="Ingresa la API key principal"
+              required
+            ></textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="api-key-suite">API Key Suite:</label>
+            <textarea
+              id="api-key-suite"
+              name="apiKeySuite"
+              rows="3"
+              style="resize: vertical"
+              placeholder="Ingresa la API key para suite"
+              required
+            ></textarea>
+          </div>
+
+          <div class="config-actions">
+            <button
+              type="button"
+              class="config-btn secondary"
+              id="load-default-keys"
+            >
+              <i class="fas fa-undo"></i> Cargar Keys por Defecto
+            </button>
+            <button type="button" class="config-btn secondary" id="cancel-api">
+              <i class="fas fa-times"></i> Cancelar
+            </button>
+            <button type="submit" class="config-btn primary">
+              <i class="fas fa-save"></i> Guardar API Keys
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
     <div class="main-container">
       <div class="header-section">
         <h1><i class="fas fa-credit-card"></i> SINTESIS Pay</h1>
         <p>Sistema de Pagos Seguro y Confiable</p>
+        <div style="margin-top: 1rem">
+          <button
+            id="config-btn"
+            class="config-btn secondary"
+            style="margin-right: 0.5rem"
+          >
+            <i class="fas fa-cog"></i> Configurar Datos
+          </button>
+          <button id="api-keys-btn" class="config-btn secondary">
+            <i class="fas fa-key"></i> API Keys
+          </button>
+        </div>
       </div>
 
       <div class="payment-card">
