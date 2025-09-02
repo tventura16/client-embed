@@ -374,7 +374,7 @@ async function authenticate(apiKey, cardType = "main") {
 }
 
 async function generatePaymentLink(token, cardType = "main") {
-  const url = `${urlbase}payments/generate-link`;
+  const url = `${urlbase}embed/generate-link`;
 
   try {
     const response = await fetch(url, {
@@ -432,7 +432,7 @@ async function generatePaymentLink(token, cardType = "main") {
 }
 
 async function generatePaymentLinkSuite(token) {
-  const url = `${urlbase}payments/generate-link`;
+  const url = `${urlbase}embed/generate-link`;
 
   try {
     const response = await fetch(url, {
