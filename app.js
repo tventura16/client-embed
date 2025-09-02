@@ -360,13 +360,11 @@ async function authenticate(apiKey, cardType = "main") {
     if (!response.ok) throw new Error("Error en la autenticación");
 
     const result = await response.json();
+    const data = result.data;
     const tokenKey = cardType === "suite" ? keySuite : key;
-    setAuthToken(tokenKey, result.accessToken);
-    console.log(
-      `Nuevo token de autenticación ${cardType}:`,
-      result.accessToken
-    );
-    return result.accessToken;
+    setAuthToken(tokenKey, data.accessToken);
+    console.log(`Nuevo token de autenticación ${cardType}:`, data.accessToken);
+    return data.accessToken;
   } catch (error) {
     console.error("Error al autenticar:", error);
     hideLoading(cardType);
