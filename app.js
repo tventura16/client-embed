@@ -30,18 +30,18 @@ const keySuite = "authTokenSuite";
 
 // Datos por defecto
 const defaultRequestData = {
-  email: "tory@gmail.com",
-  password: "tork2025",
-  firstName: "eitner",
+  email: "bolivia@sintesis.com.bo",
+  password: "",
+  firstName: "alejandro",
   lastName: "montero",
-  fullName: "david montero",
-  identityNumber: "5808569",
-  identityExtension: "tj",
-  identityComplement: "01",
-  phoneNumber: "75118536",
-  accountType: "MCE",
+  fullName: "alejandro montero",
+  identityNumber: "8569751",
+  identityExtension: "",
+  identityComplement: "",
+  phoneNumber: "",
+  accountType: "",
   country: "BOLIVIA",
-  birthDate: 19850616,
+  birthDate: "",
   activated: true,
 };
 
@@ -139,38 +139,39 @@ function hideConfigModal() {
 function loadDataToForm() {
   const currentData = getRequestData();
 
-  document.getElementById("email").value = currentData.email;
-  document.getElementById("password").value = currentData.password;
-  document.getElementById("firstName").value = currentData.firstName;
-  document.getElementById("lastName").value = currentData.lastName;
-  document.getElementById("fullName").value = currentData.fullName;
-  document.getElementById("identityNumber").value = currentData.identityNumber;
+  document.getElementById("email").value = currentData.email || "";
+  document.getElementById("password").value = currentData.password || "";
+  document.getElementById("firstName").value = currentData.firstName || "";
+  document.getElementById("lastName").value = currentData.lastName || "";
+  document.getElementById("fullName").value = currentData.fullName || "";
+  document.getElementById("identityNumber").value =
+    currentData.identityNumber || "";
   document.getElementById("identityExtension").value =
-    currentData.identityExtension;
+    currentData.identityExtension || "";
   document.getElementById("identityComplement").value =
-    currentData.identityComplement;
-  document.getElementById("phoneNumber").value = currentData.phoneNumber;
-  document.getElementById("accountType").value = currentData.accountType;
-  document.getElementById("country").value = currentData.country;
-  document.getElementById("birthDate").value = currentData.birthDate;
+    currentData.identityComplement || "";
+  document.getElementById("phoneNumber").value = currentData.phoneNumber || "";
+  document.getElementById("accountType").value = currentData.accountType || "";
+  document.getElementById("country").value = currentData.country || "BOLIVIA";
+  document.getElementById("birthDate").value = currentData.birthDate || "";
 }
 
 function loadDefaultsToForm() {
-  document.getElementById("email").value = defaultRequestData.email;
-  document.getElementById("password").value = defaultRequestData.password;
-  document.getElementById("firstName").value = defaultRequestData.firstName;
-  document.getElementById("lastName").value = defaultRequestData.lastName;
-  document.getElementById("fullName").value = defaultRequestData.fullName;
+  document.getElementById("email").value = defaultRequestData.email || "";
+  document.getElementById("password").value = "";
+  document.getElementById("firstName").value =
+    defaultRequestData.firstName || "";
+  document.getElementById("lastName").value = defaultRequestData.lastName || "";
+  document.getElementById("fullName").value =
+    defaultRequestData.firstName + " " + defaultRequestData.lastName || "";
   document.getElementById("identityNumber").value =
-    defaultRequestData.identityNumber;
-  document.getElementById("identityExtension").value =
-    defaultRequestData.identityExtension;
-  document.getElementById("identityComplement").value =
-    defaultRequestData.identityComplement;
-  document.getElementById("phoneNumber").value = defaultRequestData.phoneNumber;
-  document.getElementById("accountType").value = defaultRequestData.accountType;
-  document.getElementById("country").value = defaultRequestData.country;
-  document.getElementById("birthDate").value = defaultRequestData.birthDate;
+    defaultRequestData.identityNumber || "";
+  document.getElementById("identityExtension").value = "";
+  document.getElementById("identityComplement").value = "";
+  document.getElementById("phoneNumber").value = "";
+  document.getElementById("accountType").value = "";
+  document.getElementById("country").value = "BOLIVIA";
+  document.getElementById("birthDate").value = "";
 }
 
 function handleConfigSave(event) {
