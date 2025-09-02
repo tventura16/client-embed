@@ -131,38 +131,19 @@ function loadDataToForm() {
   const currentData = getRequestData();
 
   document.getElementById("email").value = currentData.email || "";
-  document.getElementById("password").value = currentData.password || "";
   document.getElementById("firstName").value = currentData.firstName || "";
   document.getElementById("lastName").value = currentData.lastName || "";
-  document.getElementById("fullName").value = currentData.fullName || "";
   document.getElementById("identityNumber").value =
     currentData.identityNumber || "";
-  document.getElementById("identityExtension").value =
-    currentData.identityExtension || "";
-  document.getElementById("identityComplement").value =
-    currentData.identityComplement || "";
-  document.getElementById("phoneNumber").value = currentData.phoneNumber || "";
-  document.getElementById("accountType").value = currentData.accountType || "";
-  document.getElementById("country").value = currentData.country || "BOLIVIA";
-  document.getElementById("birthDate").value = currentData.birthDate || "";
 }
 
 function loadDefaultsToForm() {
   document.getElementById("email").value = defaultRequestData.email || "";
-  document.getElementById("password").value = "";
   document.getElementById("firstName").value =
     defaultRequestData.firstName || "";
   document.getElementById("lastName").value = defaultRequestData.lastName || "";
-  document.getElementById("fullName").value =
-    defaultRequestData.firstName + " " + defaultRequestData.lastName || "";
   document.getElementById("identityNumber").value =
     defaultRequestData.identityNumber || "";
-  document.getElementById("identityExtension").value = "";
-  document.getElementById("identityComplement").value = "";
-  document.getElementById("phoneNumber").value = "";
-  document.getElementById("accountType").value = "";
-  document.getElementById("country").value = "BOLIVIA";
-  document.getElementById("birthDate").value = "";
 }
 
 function handleConfigSave(event) {
@@ -171,18 +152,9 @@ function handleConfigSave(event) {
   const formData = new FormData(event.target);
   const newData = {
     email: formData.get("email"),
-    password: formData.get("password"),
     firstName: formData.get("firstName"),
     lastName: formData.get("lastName"),
-    fullName: formData.get("fullName"),
     identityNumber: formData.get("identityNumber"),
-    identityExtension: formData.get("identityExtension"),
-    identityComplement: formData.get("identityComplement"),
-    phoneNumber: formData.get("phoneNumber"),
-    accountType: formData.get("accountType"),
-    country: formData.get("country"),
-    birthDate: parseInt(formData.get("birthDate")),
-    activated: true,
   };
 
   // Guardar en localStorage
@@ -416,10 +388,10 @@ async function generatePaymentLink(token, cardType = "main") {
       body: JSON.stringify(requestData),
     });
 
-    const data = await response.json();
-    const paymentLink = data.embedUrl || data.url || data.iframeUrl;
+    const result = await response.json();
 
-    if (paymentLink) {
+    if (result.success) {
+      const dataResult = result.data;
       const iframeId =
         cardType === "suite" ? "payment-iframe-suite" : "payment-iframe";
       const containerId =
@@ -428,7 +400,8 @@ async function generatePaymentLink(token, cardType = "main") {
       const iframe = document.getElementById(iframeId);
       const container = document.getElementById(containerId);
 
-      iframe.src = paymentLink;
+      iframe.src =
+        dataResult.embedUrl || dataResult.url || dataResult.iframeUrl;
       container.style.display = "block";
 
       // Añadir animación al iframe
@@ -461,25 +434,26 @@ async function generatePaymentLink(token, cardType = "main") {
 }
 
 async function generatePaymentLinkSuite(token) {
-  const url = `${urlbase}payments/generate-embed-link`;
+  const url = `${urlbase}payments/generate-link`;
 
   try {
     const response = await fetch(url, {
-      method: "GET",
+      method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
     });
 
-    const data = await response.json();
-    const paymentLink = data.embedUrl || data.url || data.iframeUrl;
+    const result = await response.json();
 
-    if (paymentLink) {
+    if (result.success) {
+      const dataResult = result.data;
       const iframe = document.getElementById("payment-iframe-suite");
       const container = document.getElementById("iframe-container-suite");
 
-      iframe.src = paymentLink;
+      iframe.src =
+        dataResult.embedUrl || dataResult.url || dataResult.iframeUrl;
       container.style.display = "block";
 
       // Añadir animación al iframe
