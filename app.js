@@ -31,18 +31,9 @@ const keySuite = "authTokenSuite";
 // Datos por defecto
 const defaultRequestData = {
   email: "bolivia@sintesis.com.bo",
-  password: "",
   firstName: "alejandro",
   lastName: "montero",
-  fullName: "alejandro montero",
   identityNumber: "8569751",
-  identityExtension: "",
-  identityComplement: "",
-  phoneNumber: "",
-  accountType: "",
-  country: "BOLIVIA",
-  birthDate: "",
-  activated: true,
 };
 
 // Obtener datos del localStorage o usar defaults
