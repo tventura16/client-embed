@@ -5,13 +5,20 @@ const urlbase =
 const defaultApiKeys = {
   apiKey: "dGVzdF9hcGlfa2V5XzEyMzQ1Njc4OTA=",
   apiKeySuite: "YXBpX2tleV9hZGY1ZTIzMzE2NjQwODc4Mw==",
+  apiKeyAccount: "Zm9qU29iTzF0dDdQeFlzS3VkR2syQzN0cnY3emE0bE8=",
 };
 
 // Funciones para manejar API keys
 function getApiKeys() {
   const savedKeys = localStorage.getItem("apiKeys");
   if (savedKeys) {
-    return JSON.parse(savedKeys);
+    const parsed = JSON.parse(savedKeys);
+    // Asegurar que todas las keys existen, usar defaults para las que falten
+    return {
+      apiKey: parsed.apiKey || defaultApiKeys.apiKey,
+      apiKeySuite: parsed.apiKeySuite || defaultApiKeys.apiKeySuite,
+      apiKeyAccount: parsed.apiKeyAccount || defaultApiKeys.apiKeyAccount,
+    };
   }
   return defaultApiKeys;
 }
@@ -24,9 +31,11 @@ function saveApiKeys(keys) {
 const apiKeys = getApiKeys();
 const apiKey = apiKeys.apiKey;
 const apiKeySuite = apiKeys.apiKeySuite;
+const apiKeyAccount = apiKeys.apiKeyAccount;
 
 const key = "authToken";
 const keySuite = "authTokenSuite";
+const keyAccount = "authTokenAccount";
 
 // Datos por defecto
 const defaultRequestData = {
@@ -34,13 +43,28 @@ const defaultRequestData = {
   firstName: "alejandro",
   lastName: "montero",
   identityNumber: "8569751",
+  identityExtension: "tj",
+  accountNumber: 1234567890,
+  clientId: 12345,
 };
 
 // Obtener datos del localStorage o usar defaults
 function getRequestData() {
   const savedData = localStorage.getItem("requestData");
   if (savedData) {
-    return JSON.parse(savedData);
+    const parsed = JSON.parse(savedData);
+    // Asegurar que todos los campos existen, usar defaults para los que falten
+    return {
+      email: parsed.email || defaultRequestData.email,
+      firstName: parsed.firstName || defaultRequestData.firstName,
+      lastName: parsed.lastName || defaultRequestData.lastName,
+      identityNumber:
+        parsed.identityNumber || defaultRequestData.identityNumber,
+      identityExtension:
+        parsed.identityExtension || defaultRequestData.identityExtension,
+      accountNumber: parsed.accountNumber || defaultRequestData.accountNumber,
+      clientId: parsed.clientId || defaultRequestData.clientId,
+    };
   }
   return defaultRequestData;
 }
@@ -64,6 +88,10 @@ document.addEventListener("DOMContentLoaded", () => {
   document
     .getElementById("generate-btn-suite")
     .addEventListener("click", handleGenerateClickSuite);
+
+  document
+    .getElementById("generate-btn-account")
+    .addEventListener("click", handleGenerateClickAccount);
 
   // Event listener para botón de configuración
   document
@@ -135,6 +163,11 @@ function loadDataToForm() {
   document.getElementById("lastName").value = currentData.lastName || "";
   document.getElementById("identityNumber").value =
     currentData.identityNumber || "";
+  document.getElementById("identityExtension").value =
+    currentData.identityExtension || "";
+  document.getElementById("accountNumber").value =
+    currentData.accountNumber || "";
+  document.getElementById("clientId").value = currentData.clientId || "";
 }
 
 function loadDefaultsToForm() {
@@ -144,6 +177,11 @@ function loadDefaultsToForm() {
   document.getElementById("lastName").value = defaultRequestData.lastName || "";
   document.getElementById("identityNumber").value =
     defaultRequestData.identityNumber || "";
+  document.getElementById("identityExtension").value =
+    defaultRequestData.identityExtension || "";
+  document.getElementById("accountNumber").value =
+    defaultRequestData.accountNumber || "";
+  document.getElementById("clientId").value = defaultRequestData.clientId || "";
 }
 
 function handleConfigSave(event) {
@@ -155,6 +193,9 @@ function handleConfigSave(event) {
     firstName: formData.get("firstName"),
     lastName: formData.get("lastName"),
     identityNumber: formData.get("identityNumber"),
+    identityExtension: formData.get("identityExtension"),
+    accountNumber: parseInt(formData.get("accountNumber")),
+    clientId: parseInt(formData.get("clientId")),
   };
 
   // Guardar en localStorage
@@ -187,11 +228,14 @@ function loadKeysToForm() {
 
   document.getElementById("api-key-main").value = currentKeys.apiKey;
   document.getElementById("api-key-suite").value = currentKeys.apiKeySuite;
+  document.getElementById("api-key-account").value = currentKeys.apiKeyAccount;
 }
 
 function loadDefaultKeysToForm() {
   document.getElementById("api-key-main").value = defaultApiKeys.apiKey;
   document.getElementById("api-key-suite").value = defaultApiKeys.apiKeySuite;
+  document.getElementById("api-key-account").value =
+    defaultApiKeys.apiKeyAccount;
 }
 
 function handleApiKeysSave(event) {
@@ -201,11 +245,12 @@ function handleApiKeysSave(event) {
   const newKeys = {
     apiKey: formData.get("apiKey").trim(),
     apiKeySuite: formData.get("apiKeySuite").trim(),
+    apiKeyAccount: formData.get("apiKeyAccount").trim(),
   };
 
   // Validar que no estén vacías
-  if (!newKeys.apiKey || !newKeys.apiKeySuite) {
-    alert("Por favor, completa ambas API keys");
+  if (!newKeys.apiKey || !newKeys.apiKeySuite || !newKeys.apiKeyAccount) {
+    alert("Por favor, completa todas las API keys");
     return;
   }
 
@@ -255,9 +300,18 @@ window.addEventListener("load", () => {
   }
 });
 function showLoading(cardType = "main") {
-  const btnId = cardType === "suite" ? "generate-btn-suite" : "generate-btn";
-  const statusId =
-    cardType === "suite" ? "status-indicator-suite" : "status-indicator";
+  let btnId, statusId;
+
+  if (cardType === "suite") {
+    btnId = "generate-btn-suite";
+    statusId = "status-indicator-suite";
+  } else if (cardType === "account") {
+    btnId = "generate-btn-account";
+    statusId = "status-indicator-account";
+  } else {
+    btnId = "generate-btn";
+    statusId = "status-indicator";
+  }
 
   const btn = document.getElementById(btnId);
   const spinner = btn.querySelector(".loading-spinner");
@@ -268,16 +322,29 @@ function showLoading(cardType = "main") {
   statusIndicator.className = "status-indicator loading";
   statusIndicator.style.display = "flex";
 
-  const message =
-    cardType === "suite"
-      ? "Procesando solicitud suite..."
-      : "Procesando solicitud...";
+  let message;
+  if (cardType === "suite") {
+    message = "Procesando solicitud suite...";
+  } else if (cardType === "account") {
+    message = "Procesando solicitud débito en cuenta...";
+  } else {
+    message = "Procesando solicitud...";
+  }
 
   statusIndicator.innerHTML = `<i class="fas fa-spinner fa-spin"></i> <span>${message}</span>`;
 }
 
 function hideLoading(cardType = "main") {
-  const btnId = cardType === "suite" ? "generate-btn-suite" : "generate-btn";
+  let btnId;
+
+  if (cardType === "suite") {
+    btnId = "generate-btn-suite";
+  } else if (cardType === "account") {
+    btnId = "generate-btn-account";
+  } else {
+    btnId = "generate-btn";
+  }
+
   const btn = document.getElementById(btnId);
   const spinner = btn.querySelector(".loading-spinner");
 
@@ -289,8 +356,16 @@ function showSuccess(
   message = "Sistema de pagos cargado correctamente",
   cardType = "main"
 ) {
-  const statusId =
-    cardType === "suite" ? "status-indicator-suite" : "status-indicator";
+  let statusId;
+
+  if (cardType === "suite") {
+    statusId = "status-indicator-suite";
+  } else if (cardType === "account") {
+    statusId = "status-indicator-account";
+  } else {
+    statusId = "status-indicator";
+  }
+
   const statusIndicator = document.getElementById(statusId);
   statusIndicator.className = "status-indicator success";
   statusIndicator.innerHTML = `<i class="fas fa-check-circle"></i> <span>${message}</span>`;
@@ -305,8 +380,16 @@ function showError(
   message = "Error al cargar el sistema de pagos",
   cardType = "main"
 ) {
-  const statusId =
-    cardType === "suite" ? "status-indicator-suite" : "status-indicator";
+  let statusId;
+
+  if (cardType === "suite") {
+    statusId = "status-indicator-suite";
+  } else if (cardType === "account") {
+    statusId = "status-indicator-account";
+  } else {
+    statusId = "status-indicator";
+  }
+
   const statusIndicator = document.getElementById(statusId);
   statusIndicator.className = "status-indicator error";
   statusIndicator.style.display = "flex";
@@ -329,9 +412,18 @@ function setAuthToken(key, token) {
 async function authenticate(apiKey, cardType = "main") {
   const url = `${urlbase}auth/authenticate`;
   try {
-    const btnId = cardType === "suite" ? "generate-btn-suite" : "generate-btn";
-    const statusId =
-      cardType === "suite" ? "status-indicator-suite" : "status-indicator";
+    let btnId, statusId;
+
+    if (cardType === "suite") {
+      btnId = "generate-btn-suite";
+      statusId = "status-indicator-suite";
+    } else if (cardType === "account") {
+      btnId = "generate-btn-account";
+      statusId = "status-indicator-account";
+    } else {
+      btnId = "generate-btn";
+      statusId = "status-indicator";
+    }
 
     const btn = document.getElementById(btnId);
     const spinner = btn.querySelector(".loading-spinner");
@@ -342,10 +434,14 @@ async function authenticate(apiKey, cardType = "main") {
     statusIndicator.className = "status-indicator loading";
     statusIndicator.style.display = "flex";
 
-    const message =
-      cardType === "suite"
-        ? "Obteniendo credenciales suite..."
-        : "Obteniendo credenciales...";
+    let message;
+    if (cardType === "suite") {
+      message = "Obteniendo credenciales suite...";
+    } else if (cardType === "account") {
+      message = "Obteniendo credenciales débito en cuenta...";
+    } else {
+      message = "Obteniendo credenciales...";
+    }
 
     statusIndicator.innerHTML = `<i class="fas fa-spinner fa-spin"></i> <span>${message}</span>`;
 
@@ -361,7 +457,16 @@ async function authenticate(apiKey, cardType = "main") {
 
     const result = await response.json();
     const data = result.data;
-    const tokenKey = cardType === "suite" ? keySuite : key;
+    let tokenKey;
+
+    if (cardType === "suite") {
+      tokenKey = keySuite;
+    } else if (cardType === "account") {
+      tokenKey = keyAccount;
+    } else {
+      tokenKey = key;
+    }
+
     setAuthToken(tokenKey, data.accessToken);
     console.log(`Nuevo token de autenticación ${cardType}:`, data.accessToken);
     return data.accessToken;
@@ -383,17 +488,27 @@ async function generatePaymentLink(token, cardType = "main") {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify(requestData),
+      body: JSON.stringify({
+        email: requestData.email,
+        firstName: requestData.firstName,
+        lastName: requestData.lastName,
+        identityNumber: requestData.identityNumber,
+      }),
     });
 
     const result = await response.json();
 
     if (result.success) {
       const dataResult = result.data;
-      const iframeId =
-        cardType === "suite" ? "payment-iframe-suite" : "payment-iframe";
-      const containerId =
-        cardType === "suite" ? "iframe-container-suite" : "iframe-container";
+      let iframeId, containerId;
+
+      if (cardType === "suite") {
+        iframeId = "payment-iframe-suite";
+        containerId = "iframe-container-suite";
+      } else {
+        iframeId = "payment-iframe";
+        containerId = "iframe-container";
+      }
 
       const iframe = document.getElementById(iframeId);
       const container = document.getElementById(containerId);
@@ -441,6 +556,12 @@ async function generatePaymentLinkSuite(token) {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
+      body: JSON.stringify({
+        email: requestData.email,
+        firstName: requestData.firstName,
+        lastName: requestData.lastName,
+        identityNumber: requestData.identityNumber,
+      }),
     });
 
     const result = await response.json();
@@ -479,6 +600,75 @@ async function generatePaymentLinkSuite(token) {
   }
 }
 
+async function generateAccountDebitLink(token) {
+  const url = `${urlbase}embed/generate-link-account`;
+
+  try {
+    const requestBody = {
+      customer: {
+        email: requestData.email,
+        firstName: requestData.firstName,
+        lastName: requestData.lastName,
+        identityNumber: requestData.identityNumber,
+        identityExtension: requestData.identityExtension,
+      },
+      account: {
+        accountNumber: requestData.accountNumber,
+        clientId: requestData.clientId,
+      },
+    };
+
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(requestBody),
+    });
+
+    const result = await response.json();
+
+    if (result.success) {
+      const dataResult = result.data;
+      const iframe = document.getElementById("payment-iframe-account");
+      const container = document.getElementById("iframe-container-account");
+
+      iframe.src =
+        dataResult.embedUrl || dataResult.url || dataResult.iframeUrl;
+      container.style.display = "block";
+
+      // Añadir animación al iframe
+      iframe.style.opacity = "0";
+      iframe.style.transform = "translateY(20px)";
+
+      iframe.onload = () => {
+        hideLoading("account");
+        showSuccess(
+          "Sistema de débito en cuenta cargado correctamente",
+          "account"
+        );
+        iframe.style.transition = "all 0.5s ease";
+        iframe.style.opacity = "1";
+        iframe.style.transform = "translateY(0)";
+
+        // Scroll suave hacia el iframe
+        container.scrollIntoView({ behavior: "smooth", block: "start" });
+      };
+    } else {
+      hideLoading("account");
+      showError(
+        "No se encontró un enlace de débito en cuenta en la respuesta.",
+        "account"
+      );
+    }
+  } catch (error) {
+    console.error("Error al generar el enlace de débito en cuenta:", error);
+    hideLoading("account");
+    showError("Error al generar el enlace de débito en cuenta.", "account");
+  }
+}
+
 async function handleGenerateClick() {
   let token = getAuthToken(key);
 
@@ -508,6 +698,22 @@ async function handleGenerateClickSuite() {
   } else {
     hideLoading("suite");
     showError("Acceso no permitido", "suite");
+  }
+}
+
+async function handleGenerateClickAccount() {
+  let token = getAuthToken(keyAccount);
+
+  if (!isTokenValid(token)) {
+    const currentApiKeys = getApiKeys();
+    token = await authenticate(currentApiKeys.apiKeyAccount, "account");
+  }
+
+  if (token) {
+    await generateAccountDebitLink(token);
+  } else {
+    hideLoading("account");
+    showError("Acceso no permitido", "account");
   }
 }
 

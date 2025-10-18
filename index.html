@@ -188,6 +188,18 @@
         box-sizing: border-box;
       }
 
+      #payment-iframe-account {
+        width: 100%;
+        height: 700px;
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+        background: white;
+        transition: all 0.3s ease;
+        min-width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+      }
       .status-indicator {
         display: none;
         align-items: center;
@@ -310,7 +322,8 @@
         }
 
         #payment-iframe,
-        #payment-iframe-suite {
+        #payment-iframe-suite,
+        #payment-iframe-account {
           height: 600px;
           width: 100%;
           min-width: 100%;
@@ -516,6 +529,31 @@
               required
             />
           </div>
+
+          <div class="form-group">
+            <label for="identityExtension">Extensión de Identidad:</label>
+            <input
+              type="text"
+              id="identityExtension"
+              name="identityExtension"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="accountNumber">Número de Cuenta:</label>
+            <input
+              type="number"
+              id="accountNumber"
+              name="accountNumber"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="clientId">ID del Cliente:</label>
+            <input type="number" id="clientId" name="clientId" required />
+          </div>
           <div class="config-actions">
             <button
               type="button"
@@ -568,6 +606,18 @@
               rows="3"
               style="resize: vertical"
               placeholder="Ingresa la API key para suite"
+              required
+            ></textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="api-key-account">API Key Débito en Cuenta:</label>
+            <textarea
+              id="api-key-account"
+              name="apiKeyAccount"
+              rows="3"
+              style="resize: vertical"
+              placeholder="Ingresa la API key para débito en cuenta"
               required
             ></textarea>
           </div>
@@ -663,6 +713,35 @@
             id="payment-iframe-suite"
             src="about:blank"
             title="Sistema de Pagos Embebido"
+          ></iframe>
+        </div>
+      </div>
+
+      <div class="payment-card">
+        <div class="payment-header">
+          <h2><i class="fas fa-university"></i> Portal de Débito en Cuenta</h2>
+          <p>Gestiona tus débitos en cuenta de forma segura</p>
+        </div>
+
+        <div class="action-section">
+          <button id="generate-btn-account" class="generate-btn">
+            <i class="fas fa-bank"></i> Acceder a Débito en Cuenta
+            <span class="loading-spinner">
+              <i class="fas fa-spinner fa-spin"></i>
+            </span>
+          </button>
+
+          <div class="status-indicator" id="status-indicator-account">
+            <i class="fas fa-check-circle"></i>
+            <span>Cargando sistema de débito en cuenta...</span>
+          </div>
+        </div>
+
+        <div id="iframe-container-account" class="iframe-container">
+          <iframe
+            id="payment-iframe-account"
+            src="about:blank"
+            title="Sistema de Débito en Cuenta Embebido"
           ></iframe>
         </div>
       </div>
