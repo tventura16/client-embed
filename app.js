@@ -39,13 +39,14 @@ const keyAccount = "authTokenAccount";
 
 // Datos por defecto
 const defaultRequestData = {
-  email: "bolivia@sintesis.com.bo",
-  firstName: "alejandro",
-  lastName: "montero",
-  identityNumber: "8569751",
+  email: "toribiov@sintesis.com.bo",
+  firstName: "tork",
+  lastName: "vargas",
+  identityNumber: "5808569",
   identityExtension: "tj",
-  accountNumber: 1234567890,
-  clientId: 12345,
+  phoneNumber: "71879287",
+  accountNumber: 7051167172,
+  clientId: 26868670,
 };
 
 // Obtener datos del localStorage o usar defaults
@@ -62,6 +63,7 @@ function getRequestData() {
         parsed.identityNumber || defaultRequestData.identityNumber,
       identityExtension:
         parsed.identityExtension || defaultRequestData.identityExtension,
+      phoneNumber: parsed.phoneNumber || defaultRequestData.phoneNumber,
       accountNumber: parsed.accountNumber || defaultRequestData.accountNumber,
       clientId: parsed.clientId || defaultRequestData.clientId,
     };
@@ -165,6 +167,7 @@ function loadDataToForm() {
     currentData.identityNumber || "";
   document.getElementById("identityExtension").value =
     currentData.identityExtension || "";
+  document.getElementById("phoneNumber").value = currentData.phoneNumber || "";
   document.getElementById("accountNumber").value =
     currentData.accountNumber || "";
   document.getElementById("clientId").value = currentData.clientId || "";
@@ -179,6 +182,8 @@ function loadDefaultsToForm() {
     defaultRequestData.identityNumber || "";
   document.getElementById("identityExtension").value =
     defaultRequestData.identityExtension || "";
+  document.getElementById("phoneNumber").value =
+    defaultRequestData.phoneNumber || "";
   document.getElementById("accountNumber").value =
     defaultRequestData.accountNumber || "";
   document.getElementById("clientId").value = defaultRequestData.clientId || "";
@@ -194,6 +199,7 @@ function handleConfigSave(event) {
     lastName: formData.get("lastName"),
     identityNumber: formData.get("identityNumber"),
     identityExtension: formData.get("identityExtension"),
+    phoneNumber: formData.get("phoneNumber"),
     accountNumber: parseInt(formData.get("accountNumber")),
     clientId: parseInt(formData.get("clientId")),
   };
@@ -611,6 +617,7 @@ async function generateAccountDebitLink(token) {
         lastName: requestData.lastName,
         identityNumber: requestData.identityNumber,
         identityExtension: requestData.identityExtension,
+        phoneNumber: requestData.phoneNumber,
       },
       account: {
         accountNumber: requestData.accountNumber,
