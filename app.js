@@ -47,6 +47,11 @@ const defaultRequestData = {
   phoneNumber: "71879287",
   accountNumber: 7051167172,
   clientId: 26868670,
+  searchAccount: {
+    criterio: 1,
+    entities: [{ idCampo: 1, valor: "9898028" }],
+    group: { codGrupo: 1 },
+  },
 };
 
 // Obtener datos del localStorage o usar defaults
@@ -66,6 +71,21 @@ function getRequestData() {
       phoneNumber: parsed.phoneNumber || defaultRequestData.phoneNumber,
       accountNumber: parsed.accountNumber || defaultRequestData.accountNumber,
       clientId: parsed.clientId || defaultRequestData.clientId,
+      searchAccount: {
+        criterio:
+          parsed.searchAccount?.criterio ??
+          defaultRequestData.searchAccount.criterio,
+        entities:
+          Array.isArray(parsed.searchAccount?.entities) &&
+          parsed.searchAccount.entities.length > 0
+            ? parsed.searchAccount.entities
+            : defaultRequestData.searchAccount.entities,
+        group: {
+          codGrupo:
+            parsed.searchAccount?.group?.codGrupo ??
+            defaultRequestData.searchAccount.group.codGrupo,
+        },
+      },
     };
   }
   return defaultRequestData;
@@ -171,6 +191,11 @@ function loadDataToForm() {
   document.getElementById("accountNumber").value =
     currentData.accountNumber || "";
   document.getElementById("clientId").value = currentData.clientId || "";
+  document.getElementById("searchAccount").value = JSON.stringify(
+    currentData.searchAccount,
+    null,
+    2
+  );
 }
 
 function loadDefaultsToForm() {
@@ -187,12 +212,26 @@ function loadDefaultsToForm() {
   document.getElementById("accountNumber").value =
     defaultRequestData.accountNumber || "";
   document.getElementById("clientId").value = defaultRequestData.clientId || "";
+  document.getElementById("searchAccount").value = JSON.stringify(
+    defaultRequestData.searchAccount,
+    null,
+    2
+  );
 }
 
 function handleConfigSave(event) {
   event.preventDefault();
 
   const formData = new FormData(event.target);
+
+  let searchAccount;
+  try {
+    searchAccount = JSON.parse(formData.get("searchAccount"));
+  } catch (error) {
+    alert("El JSON de searchAccount no es válido. Revisa el formato.");
+    return;
+  }
+
   const newData = {
     email: formData.get("email"),
     firstName: formData.get("firstName"),
@@ -202,6 +241,7 @@ function handleConfigSave(event) {
     phoneNumber: formData.get("phoneNumber"),
     accountNumber: parseInt(formData.get("accountNumber")),
     clientId: parseInt(formData.get("clientId")),
+    searchAccount,
   };
 
   // Guardar en localStorage
@@ -495,10 +535,15 @@ async function generatePaymentLink(token, cardType = "main") {
         Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify({
-        email: requestData.email,
-        firstName: requestData.firstName,
-        lastName: requestData.lastName,
-        identityNumber: requestData.identityNumber,
+        customer: {
+          email: requestData.email,
+          firstName: requestData.firstName,
+          lastName: requestData.lastName,
+          identityNumber: requestData.identityNumber,
+          identityExtension: requestData.identityExtension,
+          phoneNumber: requestData.phoneNumber,
+        },
+        searchAccount: requestData.searchAccount,
       }),
     });
 
@@ -563,10 +608,15 @@ async function generatePaymentLinkSuite(token) {
         Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify({
-        email: requestData.email,
-        firstName: requestData.firstName,
-        lastName: requestData.lastName,
-        identityNumber: requestData.identityNumber,
+        customer: {
+          email: requestData.email,
+          firstName: requestData.firstName,
+          lastName: requestData.lastName,
+          identityNumber: requestData.identityNumber,
+          identityExtension: requestData.identityExtension,
+          phoneNumber: requestData.phoneNumber,
+        },
+        searchAccount: requestData.searchAccount,
       }),
     });
 

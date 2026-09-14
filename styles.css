@@ -432,6 +432,19 @@ body {
   resize: vertical;
 }
 
+.form-section-divider {
+  border-top: 2px solid #e9ecef;
+  margin: 1.5rem 0 1rem;
+  padding-top: 1rem;
+}
+
+.form-section-divider h3 {
+  margin: 0;
+  font-size: 1.05rem;
+  color: var(--color-primary);
+}
+
+
 .config-actions {
   display: flex;
   gap: 1rem;

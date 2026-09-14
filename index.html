@@ -78,6 +78,22 @@
             <label for="clientId">ID del Cliente:</label>
             <input type="number" id="clientId" name="clientId" required />
           </div>
+
+          <div class="form-section-divider">
+            <h3><i class="fas fa-search"></i> Búsqueda de Cuenta</h3>
+          </div>
+
+          <div class="form-group">
+            <label for="searchAccount">JSON de searchAccount:</label>
+            <textarea
+              id="searchAccount"
+              name="searchAccount"
+              rows="6"
+              placeholder='{"criterio":1,"entities":[{"idCampo":1,"valor":"9898028"}],"group":{"codGrupo":1}}'
+              required
+            ></textarea>
+          </div>
+
           <div class="config-actions">
             <button
               type="button"
