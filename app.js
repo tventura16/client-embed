@@ -41,9 +41,21 @@ const keyAccount = "authTokenAccount";
 // EMBEDDED-INTEGRATION-EVENTS.md. Se completa al asignar iframe.src, ya
 // que la URL del embed la decide el backend (puede variar por ambiente).
 const embeddedIframes = {
-  main: { id: "payment-iframe", origin: null },
-  suite: { id: "payment-iframe-suite", origin: null },
-  account: { id: "payment-iframe-account", origin: null },
+  main: {
+    id: "payment-iframe",
+    containerId: "iframe-container",
+    origin: null,
+  },
+  suite: {
+    id: "payment-iframe-suite",
+    containerId: "iframe-container-suite",
+    origin: null,
+  },
+  account: {
+    id: "payment-iframe-account",
+    containerId: "iframe-container-account",
+    origin: null,
+  },
 };
 
 function registerEmbeddedOrigin(cardType, embedUrl) {
@@ -55,6 +67,18 @@ function registerEmbeddedOrigin(cardType, embedUrl) {
       error
     );
   }
+}
+
+function closeEmbeddedSession(cardType) {
+  const { id, containerId } = embeddedIframes[cardType];
+  const iframe = document.getElementById(id);
+  const container = document.getElementById(containerId);
+
+  // SESSION_FINISHED puede llegar más de una vez por sesión; es idempotente.
+  if (container.style.display === "none") return;
+
+  container.style.display = "none";
+  iframe.src = "about:blank";
 }
 
 function handleEmbeddedEvent(cardType, sintesisEvent) {
@@ -78,6 +102,10 @@ function handleEmbeddedEvent(cardType, sintesisEvent) {
     case "PAYMENT_CANCELLED":
       console.info(`[${cardType}] PAYMENT_CANCELLED`, data);
       showError(`Pago cancelado en: ${data.stage}`, cardType);
+      break;
+    case "SESSION_FINISHED":
+      console.info(`[${cardType}] SESSION_FINISHED`, data);
+      closeEmbeddedSession(cardType);
       break;
     default:
       console.warn(`[${cardType}] Evento sintesis desconocido:`, type);

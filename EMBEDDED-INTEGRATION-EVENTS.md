@@ -28,7 +28,7 @@ Todo evento llega con el mismo *envelope*, sin importar la plataforma:
 {
   "sintesis": {
     "version": "1.0",
-    "type": "PAYMENT_SUCCESS",          // PAYMENT_SUCCESS | PAYMENT_FAILED | PAYMENT_CANCELLED
+    "type": "PAYMENT_SUCCESS",          // PAYMENT_SUCCESS | PAYMENT_FAILED | PAYMENT_CANCELLED | SESSION_FINISHED
     "service": "PAYMENT_GATEWAY_SINTESIS",
     "timestamp": "2026-09-09T14:32:10.123Z",  // ISO-8601 UTC
     "data": { /* ver sección 3, varía según el type */ }
@@ -47,6 +47,9 @@ Todo evento llega con el mismo *envelope*, sin importar la plataforma:
 | `PAYMENT_SUCCESS` | Al confirmarse el pago (recibo real, no un estado intermedio) | cierre el iframe/WebView inmediatamente después de pagar |
 | `PAYMENT_FAILED` | Rechazo del gateway/3DS, timeout, o error de red no recuperable | — |
 | `PAYMENT_CANCELLED` | El usuario presiona "Volver"/"Cancelar" **antes** de completar el pago | — |
+| `SESSION_FINISHED` | Inmediatamente después de cualquiera de los 3 anteriores, **y también** cuando el usuario presiona "Finalizar"/vuelve desde la pantalla de éxito | — |
+
+`SESSION_FINISHED` es una señal de "la sesión embebida terminó" pensada para integradores a los que solo les interesa saber cuándo cerrar el iframe/WebView, sin necesidad de distinguir el resultado puntual. Si ya manejas los 3 eventos anteriores, podés ignorarlo. Puede llegar **más de una vez** por sesión (una al confirmarse el pago, otra al volver manualmente) — trátalo como una señal idempotente, no como un contador.
 
 No se dispara ningún evento para usuarios `REGULAR`/`ANonymous` (login directo, no embebido) — solo aplica a sesiones iniciadas vía el link embebido (`/embedded?tk=...&tke=...`).
 
@@ -101,6 +104,15 @@ Los campos exactos varían levemente según el método de pago (QR, tarjeta ATC,
 
 Valores posibles de `stage`: `QR`, `QR_CROSSBORDER`, `PASARELA`, `ATC`, `ATC_WEBVIEW_3DS`, `TIGO`.
 
+### `SESSION_FINISHED`
+
+```jsonc
+{
+  "idSession": "a1b2c3d4...",
+  "reason": "PAYMENT_SUCCESS"    // PAYMENT_SUCCESS | PAYMENT_FAILED | PAYMENT_CANCELLED (evento que lo disparó), o "USER_RETURN" (el usuario presionó "Finalizar"/volver desde la pantalla de éxito)
+}
+```
+
 ---
 
 ## 4. Cómo escuchar el evento — por plataforma
@@ -128,6 +140,9 @@ Valores posibles de `stage`: `QR`, `QR_CROSSBORDER`, `PASARELA`, `ATC`, `ATC_WEB
         break;
       case 'PAYMENT_CANCELLED':
         console.info('Usuario canceló en', msg.data.stage);
+        break;
+      case 'SESSION_FINISHED':
+        // cerrar el iframe/modal, sin importar el resultado puntual
         break;
     }
   });
@@ -158,6 +173,7 @@ webView.addJavascriptInterface(
                 "PAYMENT_SUCCESS" -> { /* ... */ }
                 "PAYMENT_FAILED" -> { /* ... */ }
                 "PAYMENT_CANCELLED" -> { /* ... */ }
+                "SESSION_FINISHED" -> { /* ... */ }
             }
         }
     },
@@ -197,6 +213,7 @@ class ViewController: UIViewController, WKScriptMessageHandler {
         case "PAYMENT_SUCCESS": break // ...
         case "PAYMENT_FAILED": break  // ...
         case "PAYMENT_CANCELLED": break // ...
+        case "SESSION_FINISHED": break // ...
         default: break
         }
     }
@@ -228,6 +245,9 @@ function PaymentScreen() {
             // ...
             break;
           case 'PAYMENT_CANCELLED':
+            // ...
+            break;
+          case 'SESSION_FINISHED':
             // ...
             break;
         }
