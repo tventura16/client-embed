@@ -37,6 +37,76 @@ const key = "authToken";
 const keySuite = "authTokenSuite";
 const keyAccount = "authTokenAccount";
 
+// Origin esperado por iframe embebido, para validar los postMessage de
+// EMBEDDED-INTEGRATION-EVENTS.md. Se completa al asignar iframe.src, ya
+// que la URL del embed la decide el backend (puede variar por ambiente).
+const embeddedIframes = {
+  main: { id: "payment-iframe", origin: null },
+  suite: { id: "payment-iframe-suite", origin: null },
+  account: { id: "payment-iframe-account", origin: null },
+};
+
+function registerEmbeddedOrigin(cardType, embedUrl) {
+  try {
+    embeddedIframes[cardType].origin = new URL(embedUrl).origin;
+  } catch (error) {
+    console.error(
+      `No se pudo determinar el origin del embed (${cardType}):`,
+      error
+    );
+  }
+}
+
+function handleEmbeddedEvent(cardType, sintesisEvent) {
+  const { type, data } = sintesisEvent;
+
+  switch (type) {
+    case "PAYMENT_SUCCESS":
+      console.log(`[${cardType}] PAYMENT_SUCCESS`, data);
+      showSuccess(
+        `Pago confirmado: ${data.txCode} (${data.monto} ${data.moneda})`,
+        cardType
+      );
+      break;
+    case "PAYMENT_FAILED":
+      console.warn(`[${cardType}] PAYMENT_FAILED`, data);
+      showError(
+        data.message || `Pago fallido: ${data.reason}`,
+        cardType
+      );
+      break;
+    case "PAYMENT_CANCELLED":
+      console.info(`[${cardType}] PAYMENT_CANCELLED`, data);
+      showError(`Pago cancelado en: ${data.stage}`, cardType);
+      break;
+    default:
+      console.warn(`[${cardType}] Evento sintesis desconocido:`, type);
+  }
+}
+
+window.addEventListener("message", (event) => {
+  const cardType = Object.keys(embeddedIframes).find((iframeKey) => {
+    const iframe = document.getElementById(embeddedIframes[iframeKey].id);
+    return iframe && event.source === iframe.contentWindow;
+  });
+
+  if (!cardType) return;
+
+  const expectedOrigin = embeddedIframes[cardType].origin;
+  if (!expectedOrigin || event.origin !== expectedOrigin) {
+    console.warn(
+      `Mensaje descartado por origin no confiable (${cardType}):`,
+      event.origin
+    );
+    return;
+  }
+
+  const sintesisEvent = event.data?.sintesis;
+  if (!sintesisEvent) return;
+
+  handleEmbeddedEvent(cardType, sintesisEvent);
+});
+
 // Datos por defecto
 const defaultRequestData = {
   email: "toribiov@sintesis.com.bo",
@@ -566,6 +636,7 @@ async function generatePaymentLink(token, cardType = "main") {
 
       iframe.src =
         dataResult.embedUrl || dataResult.url || dataResult.iframeUrl;
+      registerEmbeddedOrigin(cardType, iframe.src);
       container.style.display = "block";
 
       // Añadir animación al iframe
@@ -629,6 +700,7 @@ async function generatePaymentLinkSuite(token) {
 
       iframe.src =
         dataResult.embedUrl || dataResult.url || dataResult.iframeUrl;
+      registerEmbeddedOrigin("suite", iframe.src);
       container.style.display = "block";
 
       // Añadir animación al iframe
@@ -693,6 +765,7 @@ async function generateAccountDebitLink(token) {
 
       iframe.src =
         dataResult.embedUrl || dataResult.url || dataResult.iframeUrl;
+      registerEmbeddedOrigin("account", iframe.src);
       container.style.display = "block";
 
       // Añadir animación al iframe
