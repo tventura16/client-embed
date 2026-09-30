@@ -28,7 +28,7 @@ Todo evento llega con el mismo *envelope*, sin importar la plataforma:
 {
   "sintesis": {
     "version": "1.0",
-    "type": "PAYMENT_SUCCESS",          // PAYMENT_SUCCESS | PAYMENT_FAILED | PAYMENT_CANCELLED | SESSION_FINISHED
+    "type": "PAYMENT_SUCCESS",          // PAYMENT_SUCCESS | PAYMENT_FAILED | PAYMENT_CANCELLED | SESSION_FINISHED | SERVICE_UNAVAILABLE
     "service": "PAYMENT_GATEWAY_SINTESIS",
     "timestamp": "2026-09-09T14:32:10.123Z",  // ISO-8601 UTC
     "data": { /* ver sección 3, varía según el type */ }
@@ -37,21 +37,22 @@ Todo evento llega con el mismo *envelope*, sin importar la plataforma:
 ```
 
 - **`version`** — versión del contrato (`"1.0"` hoy). Solo cambia si se rompe compatibilidad; nuevos campos en `data` se agregan sin subir la versión. Tu parser debe ignorar campos desconocidos, no rechazarlos.
-- **`type`** — uno de los 3 valores. Usa esto para decidir qué hacer, nunca asumas el orden de llegada.
-- En **web** (`postMessage`), `event.data` llega como el objeto ya estructurado (no como string). En **Android/iOS/React Native**, el bridge solo acepta strings — tu app recibe un `String` con este mismo JSON serializado; tenés que hacer `JSON.parse` (o el equivalente en Kotlin/Swift) vos mismo.
+- **`type`** — uno de los valores de la tabla siguiente. Usa esto para decidir qué hacer, nunca asumas el orden de llegada.
+- En **web** (`postMessage`), `event.data` llega como el objeto ya estructurado (no como string). En **Android/React Native**, el bridge solo acepta strings — tu app recibe un `String` con este mismo JSON serializado; tenés que hacer `JSON.parse` (o el equivalente en Kotlin) vos mismo. En **iOS** (`WKWebView`) `message.body` llega ya deserializado como diccionario (ver sección 4.3).
 
 ### ¿Cuándo se dispara cada evento?
 
 | `type` | Cuándo | Garantizado aunque el usuario... |
 |---|---|---|
 | `PAYMENT_SUCCESS` | Al confirmarse el pago (recibo real, no un estado intermedio) | cierre el iframe/WebView inmediatamente después de pagar |
-| `PAYMENT_FAILED` | Rechazo del gateway/3DS, timeout, o error de red no recuperable | — |
+| `PAYMENT_FAILED` | Rechazo del gateway/3DS o QR expirado (`TRUNCATED`). **No** se emite si el backend no respondió durante el pago: ver `SERVICE_UNAVAILABLE` | — |
 | `PAYMENT_CANCELLED` | El usuario presiona "Volver"/"Cancelar" **antes** de completar el pago | — |
-| `SESSION_FINISHED` | Inmediatamente después de cualquiera de los 3 anteriores, **y también** cuando el usuario presiona "Finalizar"/vuelve desde la pantalla de éxito | — |
+| `SESSION_FINISHED` | Inmediatamente después de cualquiera de los 3 anteriores, **y también** cuando el usuario presiona "Finalizar"/vuelve desde la pantalla de éxito, cuando presiona **Cerrar** en la pantalla de cierre o de servicio no disponible (ver sección 3), o tras `SERVICE_UNAVAILABLE` | — |
+| `SERVICE_UNAVAILABLE` | Un servicio de MisCuentas dejó de responder (sin red, timeout o `502/503/504`), o informa que el servicio del comercio detrás de él no está disponible (`cause: UPSTREAM`). **Terminal**: le sigue `SESSION_FINISHED` y el usuario ve la pantalla "Servicio no disponible". Una vez por sesión | — |
 
 `SESSION_FINISHED` es una señal de "la sesión embebida terminó" pensada para integradores a los que solo les interesa saber cuándo cerrar el iframe/WebView, sin necesidad de distinguir el resultado puntual. Si ya manejas los 3 eventos anteriores, podés ignorarlo. Puede llegar **más de una vez** por sesión (una al confirmarse el pago, otra al volver manualmente) — trátalo como una señal idempotente, no como un contador.
 
-No se dispara ningún evento para usuarios `REGULAR`/`ANonymous` (login directo, no embebido) — solo aplica a sesiones iniciadas vía el link embebido (`/embedded?tk=...&tke=...`).
+No se dispara ningún evento para usuarios `REGULAR`/`ANONYMOUS` (login directo, no embebido) — solo aplica a sesiones iniciadas vía el link embebido (`/embedded?tk=...&tke=...`).
 
 ---
 
@@ -90,6 +91,7 @@ Los campos exactos varían levemente según el método de pago (QR, tarjeta ATC,
 | QR (BCP/BNB) y QR Crossborder | `"TRUNCATED"` (QR expiró sin pago) |
 | Tarjeta ATC (autorización inicial o 3DS) | Título del error mostrado (ej. `"Error"`, `"Error en el pago"`) |
 | Tigo Money | Título del error mostrado (ej. `"Error"`) |
+| Pasarela general | — (hoy **no** emite `PAYMENT_FAILED`, ver sección 6) |
 
 > Si necesitas un código de error estable y tipado para automatizar reintentos, avísanos — hoy `reason` prioriza el mensaje humano-legible sobre un código de máquina.
 
@@ -109,9 +111,48 @@ Valores posibles de `stage`: `QR`, `QR_CROSSBORDER`, `PASARELA`, `ATC`, `ATC_WEB
 ```jsonc
 {
   "idSession": "a1b2c3d4...",
-  "reason": "PAYMENT_SUCCESS"    // PAYMENT_SUCCESS | PAYMENT_FAILED | PAYMENT_CANCELLED (evento que lo disparó), o "USER_RETURN" (el usuario presionó "Finalizar"/volver desde la pantalla de éxito)
+  "reason": "PAYMENT_SUCCESS"    // ver tabla
 }
 ```
+
+| `reason` | Origen |
+|---|---|
+| `PAYMENT_SUCCESS` / `PAYMENT_FAILED` / `PAYMENT_CANCELLED` | Encadenado automáticamente al evento terminal correspondiente |
+| `USER_RETURN` | El usuario presionó "Finalizar"/volver en la pantalla de éxito |
+| `USER_CLOSE` | El usuario presionó **Cerrar** en la pantalla de cierre de sesión o en la de servicio no disponible |
+| `SERVICE_UNAVAILABLE` | Un servicio dejó de responder (ver `SERVICE_UNAVAILABLE` abajo) |
+
+#### Pantalla de cierre de sesión (fallback sin eventos)
+
+Implementar los eventos es opcional. Si tu app **no** cierra el iframe/WebView al recibir `SESSION_FINISHED`, cuando el usuario presiona "Finalizar" en la pantalla de éxito MisCuentas Web lo lleva a una pantalla de **"Transacción finalizada"** (`/payment/session-finished`) en lugar de volver al menú de la app completa. Esa pantalla:
+
+- Muestra el `txCode` de la transacción.
+- Ofrece un botón **Cerrar** que reemite `SESSION_FINISHED` con `reason: "USER_CLOSE"` (útil si tu listener se registró tarde) e intenta `window.close()`.
+- Si el navegador bloquea el cierre (lo normal dentro de un iframe/WebView), le indica al usuario que cierre la ventana manualmente.
+
+Solo aplica a sesiones embebidas; un usuario `REGULAR`/`ANONYMOUS` que entre por URL es redirigido a su inicio.
+
+### `SERVICE_UNAVAILABLE`
+
+```jsonc
+{
+  "idSession": "a1b2c3d4...",      // puede venir vacío si la caída ocurre antes de establecer la sesión
+  "provider": "CATALOG",           // PLATFORM | ACCOUNTS | PAYMENT_GATEWAY | CATALOG | PAYMENT_PORTAL
+  "stage": "FLOW",                 // INIT (la sesión se estaba estableciendo) | FLOW (sesión en curso)
+  "cause": "TIMEOUT",              // TIMEOUT | NETWORK | HTTP_5XX | UPSTREAM
+  "detectedAt": "2026-09-28T14:32:10.123Z"
+}
+```
+
+Cómo interpretarlo:
+
+- **Es terminal.** Inmediatamente después llega `SESSION_FINISHED` con `reason: "SERVICE_UNAVAILABLE"` y MisCuentas Web muestra la pantalla "Servicio no disponible" (con un botón **Cerrar** que reemite `SESSION_FINISHED` con `reason: "USER_CLOSE"`). Puedes cerrar el iframe/WebView con cualquiera de los dos eventos.
+- **`cause: "UPSTREAM"`**: MisCuentas respondió, pero el sistema del comercio que consulta (por ejemplo, el de búsqueda de estudiantes de una universidad) no está disponible.
+- **`stage`** solo indica en qué momento ocurrió: `INIT` (la sesión se estaba estableciendo) o `FLOW` (sesión en curso). El comportamiento es el mismo en ambos casos.
+- **Pago en curso**: si el servicio no respondió mientras se procesaba un pago, el resultado es **desconocido** (el cobro pudo haberse procesado). Por eso no se emite `PAYMENT_FAILED`. Concilia por `idSession`/`txCode` contra tu backend antes de ofrecer un reintento, para evitar un doble cobro. La pantalla también se lo advierte al usuario.
+- Se emite **una sola vez por sesión**, aunque fallen varias peticiones o varios servicios. Para reintentar, abre una sesión embebida nueva (nuevo link `/embedded?tk=...`).
+- Solo aplica a sesiones embebidas, igual que el resto de eventos. En `REGULAR`/`ANONYMOUS` el gestor no actúa (sin timeout de cliente ni pantalla).
+- `provider` es un alias funcional estable, no el nombre de un servidor. Úsalo para métricas o mensajes, no para lógica de negocio.
 
 ---
 
@@ -140,6 +181,10 @@ Valores posibles de `stage`: `QR`, `QR_CROSSBORDER`, `PASARELA`, `ATC`, `ATC_WEB
         break;
       case 'PAYMENT_CANCELLED':
         console.info('Usuario canceló en', msg.data.stage);
+        break;
+      case 'SERVICE_UNAVAILABLE':
+        // resultado de un pago en curso es desconocido: conciliar antes de reintentar
+        console.error('Servicio no disponible', msg.data.provider, msg.data.cause);
         break;
       case 'SESSION_FINISHED':
         // cerrar el iframe/modal, sin importar el resultado puntual
@@ -173,6 +218,7 @@ webView.addJavascriptInterface(
                 "PAYMENT_SUCCESS" -> { /* ... */ }
                 "PAYMENT_FAILED" -> { /* ... */ }
                 "PAYMENT_CANCELLED" -> { /* ... */ }
+                "SERVICE_UNAVAILABLE" -> { /* conciliar antes de reintentar */ }
                 "SESSION_FINISHED" -> { /* ... */ }
             }
         }
@@ -213,6 +259,7 @@ class ViewController: UIViewController, WKScriptMessageHandler {
         case "PAYMENT_SUCCESS": break // ...
         case "PAYMENT_FAILED": break  // ...
         case "PAYMENT_CANCELLED": break // ...
+        case "SERVICE_UNAVAILABLE": break // conciliar antes de reintentar
         case "SESSION_FINISHED": break // ...
         default: break
         }
@@ -247,6 +294,9 @@ function PaymentScreen() {
           case 'PAYMENT_CANCELLED':
             // ...
             break;
+          case 'SERVICE_UNAVAILABLE':
+            // conciliar antes de reintentar
+            break;
           case 'SESSION_FINISHED':
             // ...
             break;
@@ -271,10 +321,13 @@ function PaymentScreen() {
 
 ## 6. Alcance actual y roadmap
 
-Cubierto hoy: QR (BCP/BNB), QR Crossborder, Pasarela general, Tarjeta ATC (ambas etapas: autorización + 3DS), Tigo Money.
+Cubierto hoy: QR (BCP/BNB), QR Crossborder, Tarjeta ATC (ambas etapas: autorización + 3DS), Tigo Money y Pasarela general.
+
+> **Pasarela general — cobertura parcial**: emite `PAYMENT_SUCCESS` (pantalla de éxito compartida) y `PAYMENT_CANCELLED` (`stage: "PASARELA"`), pero **no** `PAYMENT_FAILED`: sus errores se muestran en diálogos dispersos sin un punto único de fallo terminal. Si el pago falla ahí, no recibirás evento hasta que el usuario cancele o cierre; concilia por `idSession` contra tu backend.
 
 Pendiente de definir con clientes reales, no incluido en esta versión:
 - Fallback por deep link / Universal Link para WebViews sin soporte de JS bridge.
+- `PAYMENT_FAILED` en Pasarela general.
 - Código de error tipado y estable en `PAYMENT_FAILED.reason` (hoy es texto libre en algunos métodos).
 - Evento `EMBED_READY` (sesión establecida) y `EMBED_RESIZE` (alto de contenido, para auto-resize del iframe).
 

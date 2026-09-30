@@ -103,6 +103,17 @@ function handleEmbeddedEvent(cardType, sintesisEvent) {
       console.info(`[${cardType}] PAYMENT_CANCELLED`, data);
       showError(`Pago cancelado en: ${data.stage}`, cardType);
       break;
+    case "SERVICE_UNAVAILABLE":
+      // Terminal: le sigue SESSION_FINISHED. Si había un pago en curso su
+      // resultado es desconocido, conciliar por idSession/txCode antes de
+      // reintentar para evitar un doble cobro.
+      console.error(`[${cardType}] SERVICE_UNAVAILABLE`, data);
+      showError(
+        `Servicio no disponible (${data.provider}, ${data.cause}). ` +
+          "Si había un pago en curso, verifique su estado antes de reintentar.",
+        cardType
+      );
+      break;
     case "SESSION_FINISHED":
       console.info(`[${cardType}] SESSION_FINISHED`, data);
       closeEmbeddedSession(cardType);
