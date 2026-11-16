@@ -1,5 +1,5 @@
 const urlbase =
-  "https://qa.sintesis.com.bo/pasarelapagos-msapi/embedded/api/v1/";
+  "https://miscuentas.staging.sintesisdev.com/pasarelapagos-msapi/embedded/api/v1/";
 
 // API Keys por defecto
 const defaultApiKeys = {
